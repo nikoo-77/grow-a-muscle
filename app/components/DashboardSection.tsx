@@ -22,7 +22,7 @@ export default function DashboardSection() {
             No pressure — just progress, at your own pace.
           </p>
           <button className="mt-2 md:mt-0 bg-white text-[#27233A] px-10 py-6 rounded hover:bg-gray-200">
-            Sign Up
+            <a href="/signup" className="text-inherit no-underline">Sign Up</a>
           </button>
         </div>
       </div>
