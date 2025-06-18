@@ -1,11 +1,15 @@
+"use client";
+
 import Navbar from "./components/Navbar";
-import HeroSection from "./components/HeroSection";
+
+import DashboardSection from "./components/DashboardSection";
 
 export default function Home() {
   return (
     <main>
       <Navbar />
-      <HeroSection />
+   
+      <DashboardSection />
     </main>
   );
 }
