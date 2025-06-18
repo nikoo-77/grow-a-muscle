@@ -1,4 +1,11 @@
+"use client";
+
+import { useAuth } from '../contexts/AuthContext';
+import ProfileDropdown from './ProfileDropdown';
+
 export default function Navbar() {
+  const { user, loading } = useAuth();
+
   return (
     <nav
       className="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between text-white"
@@ -10,25 +17,37 @@ export default function Navbar() {
         <span className="text-3xl font-bold">growamuscle.com</span>
       </div>
 
-      {/* Right: Nav Links + Login */}
+      {/* Right: Nav Links + Auth */}
       <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
         <a href="#" className="text-2xl hover:text-blue-400">Workouts</a>
         <a href="#" className="text-2xl hover:text-blue-400">Programs</a>
         <a href="#" className="text-2xl hover:text-blue-400">Progress</a>
         <a href="#" className="text-2xl hover:text-blue-400">BMI Calculator</a>
         <a href="#" className="text-2xl hover:text-blue-400">Healthy Living</a>
-        <a
-          href="/signup"
-          className="bg-white text-[#27233A] px-6 py-3 text-2xl rounded hover:bg-gray-200 transition font-bold"
-        >
-          Sign Up
-        </a>
-        <a
-          href="/login"
-          className="bg-blue-600 text-white px-6 py-3 text-2xl rounded hover:bg-blue-700 transition"
-        >
-          Login
-        </a>
+        
+        {/* Show loading state */}
+        {loading ? (
+          <div className="w-12 h-12 bg-gray-600 rounded-full animate-pulse"></div>
+        ) : user ? (
+          // Show profile dropdown when logged in
+          <ProfileDropdown />
+        ) : (
+          // Show login/signup buttons when not logged in
+          <>
+            <a
+              href="/signup"
+              className="bg-white text-[#27233A] px-6 py-3 text-2xl rounded hover:bg-gray-200 transition font-bold"
+            >
+              Sign Up
+            </a>
+            <a
+              href="/login"
+              className="bg-blue-600 text-white px-6 py-3 text-2xl rounded hover:bg-blue-700 transition"
+            >
+              Login
+            </a>
+          </>
+        )}
       </div>
     </nav>
   );
