@@ -18,7 +18,13 @@ export default function Navbar() {
         <a href="#" className="text-2xl hover:text-blue-400">BMI Calculator</a>
         <a href="#" className="text-2xl hover:text-blue-400">Healthy Living</a>
         <a
-          href="#"
+          href="/signup"
+          className="bg-white text-[#27233A] px-6 py-3 text-2xl rounded hover:bg-gray-200 transition font-bold"
+        >
+          Sign Up
+        </a>
+        <a
+          href="/login"
           className="bg-blue-600 text-white px-6 py-3 text-2xl rounded hover:bg-blue-700 transition"
         >
           Login
