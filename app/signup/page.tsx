@@ -105,7 +105,7 @@ export default function SignupPage() {
         </div>
 
         <div className="text-center mb-8">
-          <h1 className="text-6xl font-bold text-white mb-4">💪 Join Grow A Muscle</h1>
+          <h1 className="text-6xl font-bold text-white mb-4"> Join Grow A Muscle</h1>
           <p className="text-2xl text-gray-300">
             Start your fitness journey today and build the body you've always wanted
           </p>
@@ -178,11 +178,12 @@ export default function SignupPage() {
               onChange={handleInputChange}
               className="w-full px-6 py-4 text-2xl border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="build-muscle">Build Muscle</option>
+              <option value="strength-training">Strength Training</option>
               <option value="lose-weight">Lose Weight</option>
-              <option value="get-stronger">Get Stronger</option>
-              <option value="improve-fitness">Improve Overall Fitness</option>
-              <option value="maintain-health">Maintain Health</option>
+              <option value="muscle-building">Muscle Building</option>
+              <option value="active-lifestyle">Active Lifestyle</option>
+              <option value="improve-endurance-and-stamina">Improve Endurance and Stamina</option>
+              <option value="improve-flexibility">Improve Flexibility</option>
             </select>
           </div>
 
@@ -237,26 +238,26 @@ export default function SignupPage() {
         </div>
 
         <div className="mt-8 p-6 bg-[#27233A] rounded-lg">
-          <h3 className="text-3xl font-bold text-white mb-4 text-center">🎯 What You'll Get</h3>
+          <h3 className="text-3xl font-bold text-white mb-4 text-center"> What You'll Get</h3>
           <ul className="space-y-3 text-xl text-gray-300">
             <li className="flex items-center">
-              <span className="mr-3">✅</span>
+              <span className="mr-3">-</span>
               Personalized workout plans tailored to your goals
             </li>
             <li className="flex items-center">
-              <span className="mr-3">✅</span>
+              <span className="mr-3">-</span>
               Progress tracking and analytics
             </li>
             <li className="flex items-center">
-              <span className="mr-3">✅</span>
+              <span className="mr-3">-</span>
               Expert video guides and tips
             </li>
             <li className="flex items-center">
-              <span className="mr-3">✅</span>
+              <span className="mr-3">-</span>
               Supportive community of fitness enthusiasts
             </li>
             <li className="flex items-center">
-              <span className="mr-3">✅</span>
+              <span className="mr-3">-</span>
               Nutrition guidance and meal planning
             </li>
           </ul>

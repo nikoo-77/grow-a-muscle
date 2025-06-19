@@ -42,7 +42,7 @@ export default function AccountSettingsPage() {
 
         {/* Header */}
         <div className="bg-[#505168] p-10 rounded-lg shadow-lg mb-8">
-          <h1 className="text-6xl font-bold text-white mb-4">⚙️ Account Settings</h1>
+          <h1 className="text-6xl font-bold text-white mb-4"> Account Settings</h1>
           <p className="text-2xl text-gray-300">
             Manage your account preferences and security settings
           </p>
@@ -52,7 +52,7 @@ export default function AccountSettingsPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Security Settings */}
           <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6">🔒 Security</h2>
+            <h2 className="text-4xl font-bold mb-6"> Security</h2>
             <div className="space-y-4">
               <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
                 Change Password
@@ -68,7 +68,7 @@ export default function AccountSettingsPage() {
 
           {/* Notification Settings */}
           <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6">🔔 Notifications</h2>
+            <h2 className="text-4xl font-bold mb-6"> Notifications</h2>
             <div className="space-y-4">
               <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
                 Email Notifications
@@ -84,7 +84,7 @@ export default function AccountSettingsPage() {
 
           {/* Privacy Settings */}
           <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6">🛡️ Privacy</h2>
+            <h2 className="text-4xl font-bold mb-6"> Privacy</h2>
             <div className="space-y-4">
               <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
                 Profile Visibility
@@ -100,7 +100,7 @@ export default function AccountSettingsPage() {
 
           {/* Account Information */}
           <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6">📋 Account Info</h2>
+            <h2 className="text-4xl font-bold mb-6"> Account Info</h2>
             <div className="space-y-4">
               <div className="p-4 bg-[#505168] rounded-lg">
                 <p className="text-sm text-gray-300">Email</p>

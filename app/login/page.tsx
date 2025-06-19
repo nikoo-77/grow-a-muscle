@@ -86,7 +86,7 @@ export default function LoginPage() {
         </div>
 
         <div className="text-center mb-8">
-          <h1 className="text-6xl font-bold text-white mb-4">💪 Welcome Back</h1>
+          <h1 className="text-6xl font-bold text-white mb-4"> Welcome Back</h1>
           <p className="text-2xl text-gray-300">
             Sign in to continue your fitness journey
           </p>
@@ -163,22 +163,22 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-8 p-6 bg-[#27233A] rounded-lg">
-          <h3 className="text-3xl font-bold text-white mb-4 text-center">🚀 Ready to Continue?</h3>
+          <h3 className="text-3xl font-bold text-white mb-4 text-center"> Ready to Continue?</h3>
           <ul className="space-y-3 text-xl text-gray-300">
             <li className="flex items-center">
-              <span className="mr-3">✅</span>
+              <span className="mr-3">-</span>
               Access your personalized workout plans
             </li>
             <li className="flex items-center">
-              <span className="mr-3">✅</span>
+              <span className="mr-3">-</span>
               Track your progress and achievements
             </li>
             <li className="flex items-center">
-              <span className="mr-3">✅</span>
+              <span className="mr-3">-</span>
               Connect with the fitness community
             </li>
             <li className="flex items-center">
-              <span className="mr-3">✅</span>
+              <span className="mr-3">-</span>
               Get expert tips and guidance
             </li>
           </ul>
