@@ -113,7 +113,7 @@ export default function ProfileDropdown() {
               onClick={handleSignOut}
               className="w-full px-4 py-3 text-left text-lg text-red-600 hover:bg-red-50 transition-colors flex items-center"
             >
-              <span className="mr-3">🚪</span>
+              <span className="mr-3"></span>
               Sign Out
             </button>
           </div>

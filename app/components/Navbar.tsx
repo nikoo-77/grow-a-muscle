@@ -1,5 +1,3 @@
-"use client";
-
 import { useAuth } from '../contexts/AuthContext';
 import ProfileDropdown from './ProfileDropdown';
 
@@ -14,39 +12,29 @@ export default function Navbar() {
       {/* Left: Logo + Text */}
       <div className="flex items-center space-x-3 mb-2 md:mb-0">
         <img src="/logo.png" alt="Logo" className="h-20 w-20" />
-        <span className="text-3xl font-bold">growamuscle.com</span>
+        <span className="text-3xl font-bold" style={{ color: '#DCC48E' }}>growamuscle.com</span>
       </div>
 
-      {/* Right: Nav Links + Auth */}
+      {/* Right: Nav Links + Login */}
       <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
-        <a href="#" className="text-2xl hover:text-blue-400">Workouts</a>
-        <a href="#" className="text-2xl hover:text-blue-400">Programs</a>
-        <a href="#" className="text-2xl hover:text-blue-400">Progress</a>
-        <a href="#" className="text-2xl hover:text-blue-400">BMI Calculator</a>
-        <a href="#" className="text-2xl hover:text-blue-400">Healthy Living</a>
-        
-        {/* Show loading state */}
+        <a href="#" className="text-2xl hover:text-blue-400" style={{ color: '#DCC48E' }}>Workouts</a>
+        <a href="#" className="text-2xl hover:text-blue-400" style={{ color: '#DCC48E' }}>Programs</a>
+        <a href="#" className="text-2xl hover:text-blue-400" style={{ color: '#DCC48E' }}>Progress</a>
+        <a href="#" className="text-2xl hover:text-blue-400" style={{ color: '#DCC48E' }}>BMI Calculator</a>
+        <a href="#" className="text-2xl hover:text-blue-400" style={{ color: '#DCC48E' }}>Healthy Living</a>
         {loading ? (
           <div className="w-12 h-12 bg-gray-600 rounded-full animate-pulse"></div>
         ) : user ? (
           // Show profile dropdown when logged in
           <ProfileDropdown />
         ) : (
-          // Show login/signup buttons when not logged in
-          <>
-            <a
-              href="/signup"
-              className="bg-white text-[#27233A] px-6 py-3 text-2xl rounded hover:bg-gray-200 transition font-bold"
-            >
-              Sign Up
-            </a>
-            <a
-              href="/login"
-              className="bg-blue-600 text-white px-6 py-3 text-2xl rounded hover:bg-blue-700 transition"
-            >
-              Login
-            </a>
-          </>
+          // Show only login button when not logged in
+          <a
+            href="/login"
+            className="bg-[#B3C0A4] text-[#00000] px-6 py-3 text-2xl rounded hover:bg-[#A0AD8C] transition font-bold"
+          >
+            Login
+          </a>
         )}
       </div>
     </nav>

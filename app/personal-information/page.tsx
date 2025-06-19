@@ -78,7 +78,7 @@ export default function PersonalInformationPage() {
 
         {/* Header */}
         <div className="bg-[#505168] p-10 rounded-lg shadow-lg mb-8">
-          <h1 className="text-6xl font-bold text-white mb-4">👤 Personal Information</h1>
+          <h1 className="text-6xl font-bold text-white mb-4"> Personal Information</h1>
           <p className="text-2xl text-gray-300">
             View and manage your personal profile information
           </p>
@@ -88,7 +88,7 @@ export default function PersonalInformationPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {/* Basic Information */}
           <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6">📝 Basic Information</h2>
+            <h2 className="text-4xl font-bold mb-6"> Basic Information</h2>
             <div className="space-y-4">
               <div className="p-4 bg-[#505168] rounded-lg">
                 <p className="text-sm text-gray-300">First Name</p>
@@ -110,7 +110,7 @@ export default function PersonalInformationPage() {
 
           {/* Fitness Information */}
           <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6">💪 Fitness Profile</h2>
+            <h2 className="text-4xl font-bold mb-6"> Fitness Profile</h2>
             <div className="space-y-4">
               <div className="p-4 bg-[#505168] rounded-lg">
                 <p className="text-sm text-gray-300">Primary Fitness Goal</p>
@@ -134,7 +134,7 @@ export default function PersonalInformationPage() {
 
           {/* Account Statistics */}
           <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6">📊 Account Statistics</h2>
+            <h2 className="text-4xl font-bold mb-6"> Account Statistics</h2>
             <div className="space-y-4">
               <div className="p-4 bg-[#505168] rounded-lg">
                 <p className="text-sm text-gray-300">Member Since</p>
@@ -163,7 +163,7 @@ export default function PersonalInformationPage() {
 
           {/* Additional Information */}
           <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6">➕ Additional Info</h2>
+            <h2 className="text-4xl font-bold mb-6"> Additional Info</h2>
             <div className="space-y-4">
               <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
                 Add Profile Picture
