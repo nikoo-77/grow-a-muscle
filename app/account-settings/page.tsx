@@ -16,8 +16,8 @@ export default function AccountSettingsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[white] flex items-center justify-center">
-        <div className="text-4xl text-[#27233A]">Loading...</div>
+      <div className="min-h-screen bg-[#f8fdf8] flex items-center justify-center">
+        <div className="text-4xl text-[#2e3d27]">Loading...</div>
       </div>
     );
   }
@@ -27,13 +27,13 @@ export default function AccountSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[white] px-8 py-10">
-      <div className="max-w-[1200px] mx-auto">
-        {/* Back to Homepage Button */}
+    <div className="min-h-screen bg-[#f8fdf8] px-6 py-10 text-[#2e3d27]">
+      <div className="max-w-5xl mx-auto">
+        {/* Back Button */}
         <div className="mb-6">
           <a
             href="/"
-            className="inline-flex items-center text-xl text-[#27233A] hover:text-[#505168] transition-colors"
+            className="inline-flex items-center text-xl hover:text-[#60ab66] transition-colors"
           >
             <span className="mr-2">←</span>
             Back to Homepage
@@ -41,87 +41,85 @@ export default function AccountSettingsPage() {
         </div>
 
         {/* Header */}
-        <div className="bg-[#505168] p-10 rounded-lg shadow-lg mb-8">
-          <h1 className="text-6xl font-bold text-white mb-4"> Account Settings</h1>
-          <p className="text-2xl text-gray-300">
-            Manage your account preferences and security settings
+        <div className="bg-[#60ab66] p-10 rounded-xl shadow-md mb-8">
+          <h1 className="text-5xl font-bold text-white mb-2">Account Settings</h1>
+          <p className="text-xl text-[#f1fdf6]">
+            Manage your preferences and security settings
           </p>
         </div>
 
-        {/* Settings Content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Security Settings */}
-          <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6"> Security</h2>
+        {/* Settings Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Security */}
+          <div className="bg-white border border-[#60ab66] p-8 rounded-xl shadow-sm">
+            <h2 className="text-3xl font-bold mb-4 text-[#2e3d27]">Security</h2>
             <div className="space-y-4">
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
+              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
                 Change Password
               </button>
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
+              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
                 Two-Factor Authentication
               </button>
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
+              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
                 Login History
               </button>
             </div>
           </div>
 
-          {/* Notification Settings */}
-          <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6"> Notifications</h2>
+          {/* Notifications */}
+          <div className="bg-white border border-[#60ab66] p-8 rounded-xl shadow-sm">
+            <h2 className="text-3xl font-bold mb-4 text-[#2e3d27]">Notifications</h2>
             <div className="space-y-4">
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
+              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
                 Email Notifications
               </button>
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
+              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
                 Workout Reminders
               </button>
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
+              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
                 Progress Updates
               </button>
             </div>
           </div>
 
-          {/* Privacy Settings */}
-          <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6"> Privacy</h2>
+          {/* Privacy */}
+          <div className="bg-white border border-[#60ab66] p-8 rounded-xl shadow-sm">
+            <h2 className="text-3xl font-bold mb-4 text-[#2e3d27]">Privacy</h2>
             <div className="space-y-4">
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
+              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
                 Profile Visibility
               </button>
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
+              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
                 Data Export
               </button>
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
+              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
                 Delete Account
               </button>
             </div>
           </div>
 
-          {/* Account Information */}
-          <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6"> Account Info</h2>
+          {/* Account Info */}
+          <div className="bg-white border border-[#60ab66] p-8 rounded-xl shadow-sm">
+            <h2 className="text-3xl font-bold mb-4 text-[#2e3d27]">Account Info</h2>
             <div className="space-y-4">
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">Email</p>
-                <p className="text-xl font-semibold">{user.email}</p>
+              <div className="p-4 border border-[#e6f4ea] bg-[#f8fdf8] rounded-lg">
+                <p className="text-sm text-[#60ab66]">Email</p>
+                <p className="text-lg font-semibold">{user.email}</p>
               </div>
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">Member Since</p>
-                <p className="text-xl font-semibold">
-                  {user.metadata.creationTime ? 
-                    new Date(user.metadata.creationTime).toLocaleDateString() : 
-                    'N/A'
-                  }
+              <div className="p-4 border border-[#e6f4ea] bg-[#f8fdf8] rounded-lg">
+                <p className="text-sm text-[#60ab66]">Member Since</p>
+                <p className="text-lg font-semibold">
+                  {user.metadata.creationTime
+                    ? new Date(user.metadata.creationTime).toLocaleDateString()
+                    : 'N/A'}
                 </p>
               </div>
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">Last Sign In</p>
-                <p className="text-xl font-semibold">
-                  {user.metadata.lastSignInTime ? 
-                    new Date(user.metadata.lastSignInTime).toLocaleDateString() : 
-                    'N/A'
-                  }
+              <div className="p-4 border border-[#e6f4ea] bg-[#f8fdf8] rounded-lg">
+                <p className="text-sm text-[#60ab66]">Last Sign In</p>
+                <p className="text-lg font-semibold">
+                  {user.metadata.lastSignInTime
+                    ? new Date(user.metadata.lastSignInTime).toLocaleDateString()
+                    : 'N/A'}
                 </p>
               </div>
             </div>
@@ -130,4 +128,4 @@ export default function AccountSettingsPage() {
       </div>
     </div>
   );
-} 
+}

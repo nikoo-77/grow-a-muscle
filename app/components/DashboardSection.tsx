@@ -1,101 +1,172 @@
 "use client";
 
+import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 
-export default function DashboardSection() {
-  const { user } = useAuth();
+interface User {
+  id: string;
+  name?: string;
+  email?: string;
+}
+
+interface FeatureCardProps {
+  title: string;
+  description: string;
+  buttonText: string;
+  backgroundImage: string;
+  gradientColor: string;
+  onClick?: () => void;
+}
+
+const FeatureCard: React.FC<FeatureCardProps> = ({
+  title,
+  description,
+  buttonText,
+  backgroundImage,
+  gradientColor,
+  onClick
+}) => {
   return (
-    <section className="bg-[#EAEFD3] text-white px-8 py-10">
+    <div className="group relative overflow-hidden rounded-3xl shadow-2xl transform transition-all duration-500 hover:scale-105 hover:shadow-3xl">
+      <div 
+        className="absolute inset-0 opacity-90"
+        style={{
+          background: `linear-gradient(135deg, ${gradientColor}ee 0%, ${gradientColor}dd 50%, ${gradientColor}cc 100%)`
+        }}
+      />
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-20 group-hover:opacity-30 transition-opacity duration-500"
+        style={{ backgroundImage: `url('${backgroundImage}')` }}
+      />
+      <div className="absolute top-4 right-4 w-20 h-20 bg-white/10 rounded-full blur-xl" />
+      <div className="absolute bottom-4 left-4 w-16 h-16 bg-white/5 rounded-full blur-lg" />
 
-       <div className="bg-[#505168] p-10 rounded-lg shadow-lg max-w-[1700px] mx-auto">
-        <h2 className="text-7xl font-bold mb-6" style={{ color: '#DCC48E' }}>GROW A MUSCLE</h2>
-
-        <p className="mb-6 text-gray-300 text-2xl">
-          Ready to take control of your fitness journey?
-        </p>
-        <p className="mb-2 text-gray-300 text-2xl">
-          Whether you're just starting out or leveling up, our personalized workout plans and expert resources are built just for you.
-        </p>
-        <p className="mb-2 text-gray-300 text-2xl">
-          Join a supportive community that keeps you motivated, inspired, and on track.
-        </p>
-
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-6">
-          <p className="text-gray-300 mb-2 md:mb-0 text-2xl">
-            No pressure — just progress, at your own pace.
+      <div className="relative z-10 p-8 h-[500px] flex flex-col justify-between">
+        <div className="flex-grow flex flex-col justify-center text-center">
+          <h3 className="text-4xl font-bold mb-6 text-white leading-tight drop-shadow-lg">
+            {title}
+          </h3>
+          <p className="text-xl text-[#2e3d27] leading-relaxed">
+            {description}
           </p>
-          {!user && (
-            <button className="mt-2 md:mt-0 bg-[#B3C0A4] text-[#00000] px-10 py-6 rounded hover:bg-[#A0AD8C]">
-              <a href="/signup" className="text-inherit no-underline">Sign Up</a>
-            </button>
-          )}
+        </div>
+        
+        <button 
+          onClick={onClick}
+          className="w-full bg-[#60ab66]/80 backdrop-blur-sm text-white border-2 border-white/30 px-8 py-4 rounded-2xl text-lg font-semibold hover:bg-[#6ed076]/90 hover:border-white/50 transition-all duration-300 transform hover:translate-y-[-2px] shadow-lg hover:shadow-xl"
+        >
+          {buttonText}
+        </button>
+      </div>
+    </div>
+  );
+};
+
+const DashboardSection: React.FC = () => {
+  const { user } = useAuth();
+
+  const features: FeatureCardProps[] = [
+    {
+      title: "Personalized Workout Plans",
+      description: "Track workouts, body stats, and achievements with easy-to-use dashboards and progress visuals to stay motivated.",
+      buttonText: "View Workout Plans",
+      backgroundImage: "/images/dashboard-bg.jpg",
+      gradientColor: "#60ab66"
+    },
+    {
+      title: "Community Support",
+      description: "Connect with like-minded fitness enthusiasts and get the motivation you need to reach your goals.",
+      buttonText: "Visit Community",
+      backgroundImage: "/images/visitcommunity.jpg",
+      gradientColor: "#97d39b"
+    },
+    {
+      title: "Progress Tracking Tools",
+      description: "Stay motivated with visual progress charts, stat logs, and workout history to see how far you've come.",
+      buttonText: "Track Progress",
+      backgroundImage: "/images/trackprogress.jpg",
+      gradientColor: "#6ed076"
+    },
+    {
+      title: "Expert Tips & Video Guides",
+      description: "Learn from certified trainers and nutritionists through easy-to-follow videos and tips tailored to your goals.",
+      buttonText: "Explore Resources",
+      backgroundImage: "/images/healthyliving.jpg",
+      gradientColor: "#60ab66"
+    }
+  ];
+
+  const handleSignUp = (): void => {
+    window.location.href = '/signup';
+  };
+
+  return (
+    <section className="min-h-screen bg-[#e0e5dc] px-6 py-16"> {/* 🌿 Background */}
+      <div className="max-w-7xl mx-auto">
+        <div className="relative overflow-hidden rounded-3xl shadow-2xl mb-16">
+          <div className="absolute inset-0 bg-gradient-to-r from-[#60ab66] via-[#97d39b] to-[#6ed076]" /> {/* 🌈 Updated hero bg */}
+
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#97d39b]/30 rounded-full blur-3xl transform translate-x-32 -translate-y-32" />
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#6ed076]/20 rounded-full blur-2xl transform -translate-x-16 translate-y-16" />
+
+          <div className="relative z-10 p-12 lg:p-16">
+            <div className="max-w-4xl">
+              <h1 className="text-6xl lg:text-8xl font-bold mb-8 text-[#2e3d27] leading-tight">
+                GROW A MUSCLE
+              </h1>
+
+              <div className="space-y-6 text-[#2e3d27]">
+                <p className="text-2xl lg:text-3xl font-medium">
+                  Ready to take control of your fitness journey?
+                </p>
+                <p className="text-xl lg:text-2xl leading-relaxed">
+                  Whether you're just starting out or leveling up, our personalized workout plans and expert resources are built just for you.
+                </p>
+                <p className="text-xl lg:text-2xl leading-relaxed">
+                  Join a supportive community that keeps you motivated, inspired, and on track.
+                </p>
+              </div>
+
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mt-12 gap-6">
+                <p className="text-[#2e3d27] text-xl lg:text-2xl">
+                  No pressure — just progress, at your own pace.
+                </p>
+                {!user && (
+                  <button 
+                    onClick={handleSignUp}
+                    className="bg-[#60ab66] text-white px-12 py-4 rounded-2xl text-xl font-semibold hover:bg-[#6ed076] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
+                  >
+                    Start Your Journey
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Cards */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {features.map((feature, index) => (
+            <FeatureCard
+              key={index}
+              title={feature.title}
+              description={feature.description}
+              buttonText={feature.buttonText}
+              backgroundImage={feature.backgroundImage}
+              gradientColor={feature.gradientColor}
+              onClick={feature.onClick}
+            />
+          ))}
         </div>
       </div>
-      {/*first box sugod*/}
-     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-  <div className="relative bg-[#27233A] text-white p-6 rounded-lg shadow-lg h-[600px] flex flex-col justify-between overflow-hidden">
-    
-    <div className="absolute inset-0 bg-[url('/images/dashboard-bg.jpg')] bg-cover bg-center opacity-10"></div>
 
-  
-    <div className="relative z-10">
-      <h3 className="text-5xl font-bold mb-10 text-center" style={{ color: '#DCC48E' }}> Personalized Workout Plans</h3>
-      <p className="text-3xl mb-4 text-center" style={{ color: '#EAEFD3' }}>
-        Track workouts, body stats, and achievements with easy-to-use dashboards and progress visuals to stay motivated.
-      </p>
-    </div>
-
-    <button className="relative z-10 text-3xl bg-[#B3C0A4] text-[#00000] px-16 py-8 rounded hover:bg-[#A0AD8C] mx-auto">
-      View Workout Plans
-    </button>
-  </div>
-    {/*first box mana*/}
-
-    {/*2nd box*/}
-        <div className="relative bg-[#27233A] text-white p-6 rounded-lg shadow-lg h-[600px] flex flex-col justify-between overflow-hidden">
-  <div>
-
-    <div className="absolute inset-0 bg-[url('/images/visitcommunity.jpg')] bg-cover bg-center opacity-10"></div>
-    <h3 className="text-5xl font-bold mb-10 text-center" style={{ color: '#DCC48E' }}> Progress</h3>
-    <p className="text-3xl mb-4 text-center" style={{ color: '#EAEFD3' }}>
-      Track workouts, body stats, and achievements with easy-to-use dashboards and progress visuals to stay motivated.
-    </p>
-  </div>
-  
-  <button className="relative z-10 text-3xl bg-[#B3C0A4] text-[#00000] px-16 py-8 rounded hover:bg-[#A0AD8C] mx-auto">
-    Visit Community
-  </button>
-</div>
-    {/*2nd box mana*/}
-    {/*3rd box*/}
-        <div className="relative bg-[#27233A] text-white p-6 rounded-lg shadow-lg h-[600px] flex flex-col justify-between overflow-hidden">
-  <div>
-    <div className="absolute inset-0 bg-[url('/images/trackprogress.jpg')] bg-cover bg-center opacity-10"></div>
-    <h3 className="text-5xl font-bold mb-10 text-center" style={{ color: '#DCC48E' }}> Progress Tracking tool</h3>
-    <p className="text-3xl mb-4 text-center" style={{ color: '#EAEFD3' }}>
-      Stay motivated with visual progress charts, stat logs, and workout history to see how far you've come.
-    </p>
-  </div>
-  <button className="relative z-10 text-3xl bg-[#B3C0A4] text-[#00000] px-16 py-8 rounded hover:bg-[#A0AD8C] mx-auto">
-    Track Progress
-  </button>
-</div>
-    {/*3rd box mana*/}
-        {/* 4th box */}
-<div className="relative bg-[#27233A] text-white p-6 rounded-lg shadow-lg h-[600px] flex flex-col justify-between overflow-hidden">
-  <div>
-    <div className="absolute inset-0 bg-[url('/images/healthyliving.jpg')] bg-cover bg-center opacity-10"></div>
-    <h3 className="text-5xl font-bold mb-10 text-center" style={{ color: '#DCC48E' }}> Expert Tips and Video Guides</h3>
-    <p className="text-3xl mb-4 text-center" style={{ color: '#EAEFD3' }}>
-      Learn from certified trainers and nutritionists through easy-to-follow videos and tips tailored to your goals.
-    </p>
-  </div>
-  <button className="relative z-10 text-3xl bg-[#B3C0A4] text-[#00000] px-16 py-8 rounded hover:bg-[#A0AD8C] mx-auto">
-    Explore Resources
-  </button>
-</div>
-{/* 4th box mana */}
-      </div>
+      <style jsx>{`
+        .shadow-3xl {
+          box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+        }
+      `}</style>
     </section>
   );
-}
+};
+
+export default DashboardSection;
