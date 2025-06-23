@@ -33,7 +33,6 @@ export default function PersonalInformationPage() {
         try {
           const userDocRef = doc(db, "users", user.uid);
           const userDoc = await getDoc(userDocRef);
-          
           if (userDoc.exists()) {
             setUserProfile(userDoc.data() as UserProfile);
           }
@@ -44,143 +43,101 @@ export default function PersonalInformationPage() {
         }
       }
     };
-
-    if (user) {
-      fetchUserProfile();
-    }
+    if (user) fetchUserProfile();
   }, [user]);
 
   if (loading || profileLoading) {
     return (
-      <div className="min-h-screen bg-[white] flex items-center justify-center">
-        <div className="text-4xl text-[#27233A]">Loading...</div>
+      <div className="min-h-screen bg-[#f6f9f6] flex items-center justify-center">
+        <div className="text-4xl text-[#2e3d27]">Loading...</div>
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-[white] px-8 py-10">
-      <div className="max-w-[1200px] mx-auto">
-        {/* Back to Homepage Button */}
+    <div className="min-h-screen bg-[#f6f9f6] px-4 py-10">
+      <div className="max-w-5xl mx-auto">
+        {/* Back Button */}
         <div className="mb-6">
           <a
             href="/"
-            className="inline-flex items-center text-xl text-[#27233A] hover:text-[#505168] transition-colors"
+            className="inline-flex items-center text-lg text-[#2e3d27] hover:text-[#60ab66] transition-colors"
           >
-            <span className="mr-2">←</span>
-            Back to Homepage
+            ← Back to Homepage
           </a>
         </div>
 
         {/* Header */}
-        <div className="bg-[#505168] p-10 rounded-lg shadow-lg mb-8">
-          <h1 className="text-6xl font-bold text-white mb-4"> Personal Information</h1>
-          <p className="text-2xl text-gray-300">
-            View and manage your personal profile information
-          </p>
+        <div className="bg-[#60ab66] p-8 rounded-2xl shadow-lg mb-8 text-white">
+          <h1 className="text-4xl font-bold mb-2">Personal Information</h1>
+          <p className="text-xl">View and manage your personal profile</p>
         </div>
 
-        {/* Profile Content */}
+        {/* Profile Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Basic Information */}
-          <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6"> Basic Information</h2>
+          {/* Basic Info */}
+          <div className="bg-white text-[#2e3d27] p-6 rounded-2xl shadow-md">
+            <h2 className="text-2xl font-bold mb-4">Basic Info</h2>
             <div className="space-y-4">
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">First Name</p>
-                <p className="text-xl font-semibold">{userProfile?.firstName || 'Not set'}</p>
-              </div>
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">Last Name</p>
-                <p className="text-xl font-semibold">{userProfile?.lastName || 'Not set'}</p>
-              </div>
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">Email Address</p>
-                <p className="text-xl font-semibold">{userProfile?.email || user.email}</p>
-              </div>
-              <button className="w-full p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
-                Edit Basic Information
-              </button>
+              <InfoCard label="First Name" value={userProfile?.firstName} />
+              <InfoCard label="Last Name" value={userProfile?.lastName} />
+              <InfoCard label="Email" value={userProfile?.email || user.email} />
+              <ActionButton label="Edit Basic Information" />
             </div>
           </div>
 
-          {/* Fitness Information */}
-          <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6"> Fitness Profile</h2>
+          {/* Fitness Info */}
+          <div className="bg-white text-[#2e3d27] p-6 rounded-2xl shadow-md">
+            <h2 className="text-2xl font-bold mb-4">Fitness Profile</h2>
             <div className="space-y-4">
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">Primary Fitness Goal</p>
-                <p className="text-xl font-semibold capitalize">
-                  {userProfile?.fitnessGoal?.replace('-', ' ') || 'Not set'}
-                </p>
-              </div>
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">Experience Level</p>
-                <p className="text-xl font-semibold">Beginner</p>
-              </div>
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">Preferred Workout Time</p>
-                <p className="text-xl font-semibold">Not set</p>
-              </div>
-              <button className="w-full p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
-                Update Fitness Profile
-              </button>
+              <InfoCard label="Fitness Goal" value={userProfile?.fitnessGoal?.replace("-", " ") || "Not set"} />
+              <InfoCard label="Experience Level" value="Beginner" />
+              <InfoCard label="Workout Time" value="Not set" />
+              <ActionButton label="Update Fitness Profile" />
             </div>
           </div>
 
-          {/* Account Statistics */}
-          <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6"> Account Statistics</h2>
+          {/* Account Stats */}
+          <div className="bg-white text-[#2e3d27] p-6 rounded-2xl shadow-md">
+            <h2 className="text-2xl font-bold mb-4">Account Stats</h2>
             <div className="space-y-4">
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">Member Since</p>
-                <p className="text-xl font-semibold">
-                  {userProfile?.createdAt ? 
-                    new Date(userProfile.createdAt.toDate()).toLocaleDateString() : 
-                    'N/A'
-                  }
-                </p>
-              </div>
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">Last Login</p>
-                <p className="text-xl font-semibold">
-                  {userProfile?.lastLogin ? 
-                    new Date(userProfile.lastLogin.toDate()).toLocaleDateString() : 
-                    'N/A'
-                  }
-                </p>
-              </div>
-              <div className="p-4 bg-[#505168] rounded-lg">
-                <p className="text-sm text-gray-300">Total Workouts</p>
-                <p className="text-xl font-semibold">0</p>
-              </div>
+              <InfoCard label="Member Since" value={userProfile?.createdAt ? new Date(userProfile.createdAt.toDate()).toLocaleDateString() : "N/A"} />
+              <InfoCard label="Last Login" value={userProfile?.lastLogin ? new Date(userProfile.lastLogin.toDate()).toLocaleDateString() : "N/A"} />
+              <InfoCard label="Total Workouts" value="0" />
             </div>
           </div>
 
-          {/* Additional Information */}
-          <div className="bg-[#27233A] text-white p-8 rounded-lg shadow-lg">
-            <h2 className="text-4xl font-bold mb-6"> Additional Info</h2>
+          {/* Additional Info */}
+          <div className="bg-white text-[#2e3d27] p-6 rounded-2xl shadow-md">
+            <h2 className="text-2xl font-bold mb-4">Additional Info</h2>
             <div className="space-y-4">
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
-                Add Profile Picture
-              </button>
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
-                Set Height & Weight
-              </button>
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
-                Add Medical Information
-              </button>
-              <button className="w-full text-left p-4 bg-[#505168] rounded-lg hover:bg-[#3a3555] transition-colors text-xl">
-                Emergency Contacts
-              </button>
+              <ActionButton label="Add Profile Picture" />
+              <ActionButton label="Set Height & Weight" />
+              <ActionButton label="Add Medical Info" />
+              <ActionButton label="Emergency Contacts" />
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-} 
+}
+
+function InfoCard({ label, value }: { label: string; value: string | undefined }) {
+  return (
+    <div className="p-4 border border-[#60ab66] rounded-xl">
+      <p className="text-sm text-gray-500">{label}</p>
+      <p className="text-lg font-semibold">{value || "Not set"}</p>
+    </div>
+  );
+}
+
+function ActionButton({ label }: { label: string }) {
+  return (
+    <button className="w-full bg-[#60ab66] hover:bg-[#4c8a53] text-white py-3 px-4 rounded-xl text-lg font-semibold transition">
+      {label}
+    </button>
+  );
+}
