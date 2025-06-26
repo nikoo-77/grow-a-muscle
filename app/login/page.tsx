@@ -1,12 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { app, db } from "../../lib/firebaseConfig";
-import { doc, updateDoc } from "firebase/firestore";
-
-const auth = getAuth(app);
+import { supabase } from "../../lib/supabaseClient";
 
 export default function LoginPage() {
   const [formData, setFormData] = useState({ email: "", password: "" });
@@ -22,34 +18,25 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
     setLoading(true);
-
     try {
-      const userCredential = await signInWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-
-      const userDocRef = doc(db, "users", userCredential.user.uid);
-      await updateDoc(userDocRef, { lastLogin: new Date() });
-
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
+      });
+      if (signInError || !data.user) {
+        throw signInError || new Error("Login failed");
+      }
+      // Update lastLogin in users table
+      await supabase
+        .from("users")
+        .update({ last_login: new Date().toISOString() })
+        .eq("id", data.user.id);
       router.push("/");
     } catch (error: any) {
-      switch (error.code) {
-        case "auth/user-not-found":
-          setError("No account found with this email address");
-          break;
-        case "auth/wrong-password":
-          setError("Incorrect password. Please try again");
-          break;
-        case "auth/invalid-email":
-          setError("Please enter a valid email address");
-          break;
-        case "auth/too-many-requests":
-          setError("Too many failed attempts. Please try again later");
-          break;
-        default:
-          setError("Failed to sign in. Please check your credentials");
+      if (error?.message?.includes("Invalid login credentials")) {
+        setError("Incorrect email or password.");
+      } else {
+        setError(error.message || "Failed to sign in. Please check your credentials");
       }
     } finally {
       setLoading(false);
@@ -147,7 +134,7 @@ export default function LoginPage() {
 
         {/* Sign Up Prompt */}
         <div className="text-center text-sm text-[#2e3d27] mt-6">
-          Don’t have an account?{" "}
+          Don't have an account?{" "}
           <a
             href="/signup"
             className="text-[#60ab66] font-medium hover:underline"
