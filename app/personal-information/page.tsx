@@ -52,7 +52,6 @@ export default function PersonalInformationPage() {
           .select('*')
           .eq('id', user.id ?? user.uid)
           .single();
-        console.log('Fetched user profile:', data, 'Error:', error);
         if (error) {
           console.error("Error fetching user profile:", error);
         } else {
@@ -61,10 +60,7 @@ export default function PersonalInformationPage() {
         setProfileLoading(false);
       }
     };
-    if (user) {
-      console.log('Current user:', user);
-      fetchUserProfile();
-    }
+    if (user) fetchUserProfile();
   }, [user]);
 
   if (loading || profileLoading) {
