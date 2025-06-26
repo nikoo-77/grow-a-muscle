@@ -1,12 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { useRouter } from "next/navigation";
-import { app, db } from "../../lib/firebaseConfig";
-import { doc, setDoc } from "firebase/firestore";
-
-const auth = getAuth(app);
+import { supabase } from "../../lib/supabaseClient";
 
 export default function SignupPage() {
   const [formData, setFormData] = useState({
@@ -48,37 +44,35 @@ export default function SignupPage() {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        formData.email,
-        formData.password
-      );
-
-      const userDocRef = doc(db, "users", userCredential.user.uid);
-      await setDoc(userDocRef, {
-        firstName: formData.firstName,
-        lastName: formData.lastName,
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: formData.email,
-        fitnessGoal: formData.fitnessGoal,
-        createdAt: new Date(),
-        lastLogin: new Date()
+        password: formData.password,
       });
-
+      if (signUpError || !data.user) {
+        throw signUpError || new Error("Signup failed");
+      }
+      // Insert user profile into users table
+      const { error: insertError } = await supabase.from("users").insert({
+        id: data.user.id,
+        first_name: formData.firstName,
+        last_name: formData.lastName,
+        email: formData.email,
+        fitness_goal: formData.fitnessGoal,
+        created_at: new Date().toISOString(),
+        last_login: new Date().toISOString(),
+        height: null,
+        weight: null,
+        medical_info: null,
+        profile_picture: null
+      });
+      if (insertError) {
+        setError('Failed to save user profile: ' + insertError.message);
+        setLoading(false);
+        return;
+      }
       router.push("/");
     } catch (error: any) {
-      switch (error.code) {
-        case "auth/email-already-in-use":
-          setError("An account with this email already exists");
-          break;
-        case "auth/invalid-email":
-          setError("Please enter a valid email address");
-          break;
-        case "auth/weak-password":
-          setError("Password should be at least 6 characters long");
-          break;
-        default:
-          setError(error.message || "Failed to create account");
-      }
+      setError(error.message || "Failed to create account");
     } finally {
       setLoading(false);
     }
