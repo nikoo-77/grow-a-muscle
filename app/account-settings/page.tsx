@@ -109,7 +109,7 @@ export default function AccountSettingsPage() {
               <div className="p-4 border border-[#e6f4ea] bg-[#f8fdf8] rounded-lg">
                 <p className="text-sm text-[#60ab66]">Member Since</p>
                 <p className="text-lg font-semibold">
-                  {user.metadata.creationTime
+                  {user.metadata && user.metadata.creationTime
                     ? new Date(user.metadata.creationTime).toLocaleDateString()
                     : 'N/A'}
                 </p>
@@ -117,7 +117,7 @@ export default function AccountSettingsPage() {
               <div className="p-4 border border-[#e6f4ea] bg-[#f8fdf8] rounded-lg">
                 <p className="text-sm text-[#60ab66]">Last Sign In</p>
                 <p className="text-lg font-semibold">
-                  {user.metadata.lastSignInTime
+                  {user.metadata && user.metadata.lastSignInTime
                     ? new Date(user.metadata.lastSignInTime).toLocaleDateString()
                     : 'N/A'}
                 </p>

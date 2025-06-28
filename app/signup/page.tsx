@@ -48,9 +48,12 @@ export default function SignupPage() {
         email: formData.email,
         password: formData.password,
       });
+      console.log('Signup result:', { data, error: signUpError });
       if (signUpError || !data.user) {
         throw signUpError || new Error("Signup failed");
       }
+      console.log('User created:', data.user);
+      
       // Insert user profile into users table
       const { error: insertError } = await supabase.from("users").insert({
         id: data.user.id,
@@ -65,13 +68,16 @@ export default function SignupPage() {
         medical_info: null,
         profile_picture: null
       });
+      console.log('Profile insert result:', { error: insertError });
       if (insertError) {
         setError('Failed to save user profile: ' + insertError.message);
         setLoading(false);
         return;
       }
+      console.log('Profile created successfully');
       router.push("/");
     } catch (error: any) {
+      console.error('Signup error:', error);
       setError(error.message || "Failed to create account");
     } finally {
       setLoading(false);

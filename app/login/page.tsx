@@ -82,16 +82,16 @@ export default function LoginPage() {
             >
               Email
             </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={formData.email}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#60ab66]"
-              placeholder="you@example.com"
-            />
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
+                required
+                className="w-full px-4 py-2 text-sm text-[#1a1a1a] placeholder-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#60ab66]"
+                placeholder="you@example.com"
+                />
           </div>
 
           <div>
@@ -102,15 +102,15 @@ export default function LoginPage() {
               Password
             </label>
             <input
-              type="password"
-              id="password"
-              name="password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-2 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#60ab66]"
-              placeholder="Enter your password"
-            />
+            type="password"
+            id="password"
+            name="password"
+            value={formData.password}
+            onChange={handleInputChange}
+            required
+            className="w-full px-4 py-2 text-sm text-[#1a1a1a] placeholder-gray-500 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#60ab66]"
+            placeholder="Enter your password"
+          />
           </div>
 
           <div className="flex items-center justify-between text-sm text-[#2e3d27]">

@@ -47,13 +47,65 @@ export default function PersonalInformationPage() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (user) {
+        console.log('User object:', user);
+        console.log('User ID:', user.id);
         const { data, error } = await supabase
           .from('users')
           .select('*')
-          .eq('id', user.id ?? user.uid)
+          .eq('id', user.id)
           .single();
+        console.log('Query result:', { data, error });
+        
         if (error) {
           console.error("Error fetching user profile:", error);
+          
+          // If the user profile doesn't exist, create it
+          if (error.code === 'PGRST116') {
+            console.log('Creating user profile...');
+            const { data: newProfile, error: createError } = await supabase
+              .from('users')
+              .insert({
+                id: user.id,
+                first_name: '',
+                last_name: '',
+                email: user.email,
+                fitness_goal: 'muscle-building',
+                created_at: new Date().toISOString(),
+                last_login: new Date().toISOString(),
+                height: null,
+                weight: null,
+                medical_info: undefined,
+                profile_picture: undefined,
+                emergency_contacts: undefined
+              })
+              .select()
+              .single();
+            
+            if (createError) {
+              console.error("Error creating user profile:", createError);
+              if (createError.code === '42501') {
+                console.warn("RLS policy violation. Please configure RLS policies in Supabase dashboard.");
+                // Set a default profile for now
+                setUserProfile({
+                  id: user.id,
+                  first_name: '',
+                  last_name: '',
+                  email: user.email,
+                  fitness_goal: 'muscle-building',
+                  created_at: new Date().toISOString(),
+                  last_login: new Date().toISOString(),
+                  height: null,
+                  weight: null,
+                  medical_info: undefined,
+                  profile_picture: undefined,
+                  emergency_contacts: undefined
+                } as UserProfile);
+              }
+            } else {
+              console.log('User profile created:', newProfile);
+              setUserProfile(newProfile as UserProfile);
+            }
+          }
         } else {
           setUserProfile(data as UserProfile);
         }
@@ -234,7 +286,7 @@ function EditBasicInfoModal({ open, onClose, userProfile, user, onSave }: { open
       const { error } = await supabase
         .from('users')
         .update({ first_name, last_name, email })
-        .eq('id', user.id ?? user.uid);
+        .eq('id', user.id);
       if (error) throw error;
       onSave({ ...(userProfile || {}), first_name, last_name, email } as UserProfile);
       onClose();
@@ -248,7 +300,7 @@ function EditBasicInfoModal({ open, onClose, userProfile, user, onSave }: { open
     <Dialog open={open} onClose={onClose} className="fixed z-50 inset-0 overflow-y-auto">
       <DialogBackdrop className="fixed inset-0 bg-black opacity-30" />
       <div className="flex items-center justify-center min-h-screen">
-        <DialogPanel className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-auto z-10">
+        <DialogPanel className="relative bg-white text-black rounded-2xl p-8 w-full max-w-md mx-auto z-10">
           <DialogTitle className="text-2xl font-bold mb-4">Edit Basic Information</DialogTitle>
           <form className="space-y-4" onSubmit={e => { e.preventDefault(); handleSave(); }}>
             <div>
@@ -289,7 +341,7 @@ function EditFitnessProfileModal({ open, onClose, userProfile, user, onSave }: {
       const { error } = await supabase
         .from('users')
         .update({ fitness_goal })
-        .eq('id', user.id ?? user.uid);
+        .eq('id', user.id);
       if (error) throw error;
       onSave({ ...(userProfile || {}), fitness_goal } as UserProfile);
       onClose();
@@ -303,7 +355,7 @@ function EditFitnessProfileModal({ open, onClose, userProfile, user, onSave }: {
     <Dialog open={open} onClose={onClose} className="fixed z-50 inset-0 overflow-y-auto">
       <DialogBackdrop className="fixed inset-0 bg-black opacity-30" />
       <div className="flex items-center justify-center min-h-screen">
-        <DialogPanel className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-auto z-10">
+        <DialogPanel className="relative bg-white text-black rounded-2xl p-8 w-full max-w-md mx-auto z-10">
           <DialogTitle className="text-2xl font-bold mb-4">Update Fitness Profile</DialogTitle>
           <form className="space-y-4" onSubmit={e => { e.preventDefault(); handleSave(); }}>
             <div>
@@ -351,7 +403,7 @@ function AddProfilePictureModal({ open, onClose, user, onSave }: { open: boolean
       const { data, error } = await supabase
         .from('users')
         .update({ profile_picture: file })
-        .eq('id', user.id ?? user.uid)
+        .eq('id', user.id)
         .select();
       if (error) throw error;
       if (data && Array.isArray(data) && data[0]?.profile_picture) {
@@ -367,7 +419,7 @@ function AddProfilePictureModal({ open, onClose, user, onSave }: { open: boolean
     <Dialog open={open} onClose={onClose} className="fixed z-50 inset-0 overflow-y-auto">
       <DialogBackdrop className="fixed inset-0 bg-black opacity-30" />
       <div className="flex items-center justify-center min-h-screen">
-        <DialogPanel className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-auto z-10">
+        <DialogPanel className="relative bg-white text-black rounded-2xl p-8 w-full max-w-md mx-auto z-10">
           <DialogTitle className="text-2xl font-bold mb-4">Add Profile Picture</DialogTitle>
           <form className="space-y-4" onSubmit={e => { e.preventDefault(); handleUpload(); }}>
             <input type="file" accept="image/*" onChange={handleFileChange} />
@@ -402,7 +454,7 @@ function SetHeightWeightModal({ open, onClose, user, userProfile, onSave }: { op
       const { error } = await supabase
         .from('users')
         .update({ height, weight })
-        .eq('id', user.id ?? user.uid);
+        .eq('id', user.id);
       if (error) throw error;
       onSave({ height, weight });
       onClose();
@@ -416,7 +468,7 @@ function SetHeightWeightModal({ open, onClose, user, userProfile, onSave }: { op
     <Dialog open={open} onClose={onClose} className="fixed z-50 inset-0 overflow-y-auto">
       <DialogBackdrop className="fixed inset-0 bg-black opacity-30" />
       <div className="flex items-center justify-center min-h-screen">
-        <DialogPanel className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-auto z-10">
+        <DialogPanel className="relative bg-white text-black rounded-2xl p-8 w-full max-w-md mx-auto z-10">
           <DialogTitle className="text-2xl font-bold mb-4">Set Height & Weight</DialogTitle>
           <form className="space-y-4" onSubmit={e => { e.preventDefault(); handleSave(); }}>
             <div>
@@ -452,7 +504,7 @@ function AddMedicalInfoModal({ open, onClose, user, userProfile, onSave }: { ope
       const { error } = await supabase
         .from('users')
         .update({ medical_info })
-        .eq('id', user.id ?? user.uid);
+        .eq('id', user.id);
       if (error) throw error;
       onSave({ medical_info });
       onClose();
@@ -466,7 +518,7 @@ function AddMedicalInfoModal({ open, onClose, user, userProfile, onSave }: { ope
     <Dialog open={open} onClose={onClose} className="fixed z-50 inset-0 overflow-y-auto">
       <DialogBackdrop className="fixed inset-0 bg-black opacity-30" />
       <div className="flex items-center justify-center min-h-screen">
-        <DialogPanel className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-auto z-10">
+        <DialogPanel className="relative bg-white text-black rounded-2xl p-8 w-full max-w-md mx-auto z-10">
           <DialogTitle className="text-2xl font-bold mb-4">Add Medical Info</DialogTitle>
           <form className="space-y-4" onSubmit={e => { e.preventDefault(); handleSave(); }}>
             <div>
@@ -498,7 +550,7 @@ function AddEmergencyContactsModal({ open, onClose, user, userProfile, onSave }:
       const { error } = await supabase
         .from('users')
         .update({ emergency_contacts })
-        .eq('id', user.id ?? user.uid);
+        .eq('id', user.id);
       if (error) throw error;
       onSave({ emergency_contacts });
       onClose();
@@ -512,7 +564,7 @@ function AddEmergencyContactsModal({ open, onClose, user, userProfile, onSave }:
     <Dialog open={open} onClose={onClose} className="fixed z-50 inset-0 overflow-y-auto">
       <DialogBackdrop className="fixed inset-0 bg-black opacity-30" />
       <div className="flex items-center justify-center min-h-screen">
-        <DialogPanel className="relative bg-white rounded-2xl p-8 w-full max-w-md mx-auto z-10">
+        <DialogPanel className="relative bg-white text-black rounded-2xl p-8 w-full max-w-md mx-auto z-10">
           <DialogTitle className="text-2xl font-bold mb-4">Emergency Contacts</DialogTitle>
           <form className="space-y-4" onSubmit={e => { e.preventDefault(); handleSave(); }}>
             <div>
