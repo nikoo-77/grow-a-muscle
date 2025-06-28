@@ -78,8 +78,8 @@ export default function Navbar() {
 
   return (
     <nav
-      className="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between text-white"
-      style={{ backgroundColor: "#60ab66" }}
+      className="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between text-white bg-transparent fixed w-full top-0 left-0 z-30 backdrop-blur-md bg-black/10 shadow-lg"
+      style={{}}
     >
       {/* Left: Logo + Text */}
       <div className="flex items-center space-x-3 mb-2 md:mb-0">
