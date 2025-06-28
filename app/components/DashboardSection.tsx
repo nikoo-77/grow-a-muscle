@@ -104,7 +104,7 @@ const DashboardSection: React.FC = () => {
     <section className="w-full p-0 m-0">
       {/* Full-screen Hero Section */}
       <div
-        className="relative w-full h-screen flex items-end lg:items-end justify-center overflow-hidden"
+        className="relative w-full min-h-[calc(100vh-6rem)] flex items-end lg:items-end justify-center overflow-hidden pt-28"
         style={{
           backgroundImage: "url('/images/fullwidthbg.jpg')",
           backgroundSize: 'cover',

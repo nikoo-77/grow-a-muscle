@@ -20,7 +20,7 @@ export default function Navbar() {
         console.log('Navbar - User ID:', user.id);
         const { data, error } = await supabase
           .from('users')
-          .select('height, weight, fitness_goal')
+          .select('height, weight, fitness_goal, profile_picture')
           .eq('id', user.id)
           .single();
         console.log('Navbar - Query result:', { data, error });
@@ -121,7 +121,7 @@ export default function Navbar() {
           <div className="w-12 h-12 bg-gray-600 rounded-full animate-pulse"></div>
         ) : user ? (
           // Show profile dropdown when logged in
-          <ProfileDropdown />
+          <ProfileDropdown profilePicture={userProfile?.profile_picture} user={user} />
         ) : (
           // Show only login button when not logged in
           <a

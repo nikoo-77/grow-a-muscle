@@ -400,15 +400,25 @@ function AddProfilePictureModal({ open, onClose, user, onSave }: { open: boolean
     setError(null);
     setProgress(0);
     try {
-      const { data, error } = await supabase
+      // 1. Upload to Supabase Storage in a folder named after the user's id
+      const fileExt = file.name.split('.').pop();
+      const filePath = `${user.id}/profile.${fileExt}`;
+      const { error: uploadError } = await supabase.storage
+        .from('profile-pictures')
+        .upload(filePath, file, { upsert: true });
+      if (uploadError) throw uploadError;
+      // 2. Get public URL
+      const { data } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(filePath);
+      const publicUrl = data.publicUrl;
+      // 3. Update user profile with the public URL
+      const { error: updateError } = await supabase
         .from('users')
-        .update({ profile_picture: file })
-        .eq('id', user.id)
-        .select();
-      if (error) throw error;
-      if (data && Array.isArray(data) && data[0]?.profile_picture) {
-        onSave(data[0].profile_picture);
-      }
+        .update({ profile_picture: publicUrl })
+        .eq('id', user.id);
+      if (updateError) throw updateError;
+      onSave(publicUrl);
       onClose();
     } catch (e: any) {
       setError("Failed to upload. Please try again.");
