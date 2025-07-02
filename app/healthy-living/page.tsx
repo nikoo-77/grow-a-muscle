@@ -86,7 +86,7 @@ const mentalWellness = [
   },
   {
     title: "Relaxing Music Playlist",
-    content: <a href="https://open.spotify.com/playlist/37i9dQZF1DX3rxVfibe1L0" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Listen to Relaxing Music on Spotify</a>
+    content: <a href="https://open.spotify.com/playlist/51bgYVmCanTJVeRa6fsQ3P?si=c749b6865dbe4965" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Listen to Relaxing Music on Spotify</a>
   },
   {
     title: "Sleep & Recovery Tips",
