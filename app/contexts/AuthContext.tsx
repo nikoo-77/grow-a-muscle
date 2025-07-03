@@ -34,6 +34,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
+  // Ensure user record exists in users table
+  useEffect(() => {
+    if (user) {
+      supabase
+        .from('users')
+        .select('id')
+        .eq('id', user.id)
+        .single()
+        .then(({ data, error }) => {
+          if (!data) {
+            supabase.from('users').insert({
+              id: user.id,
+              email: user.email,
+              profile_picture: user.user_metadata?.avatar_url || null,
+              // Add other fields as needed
+            });
+          }
+        });
+    }
+  }, [user]);
+
   return (
     <AuthContext.Provider value={{ user, loading }}>
       {children}

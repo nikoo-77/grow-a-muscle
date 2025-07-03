@@ -2,6 +2,7 @@
 
 import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import Navbar from '../components/Navbar';
 
 interface User {
   id: string;

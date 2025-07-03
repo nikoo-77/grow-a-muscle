@@ -31,8 +31,13 @@ export default function Navbar() {
 
   return (
     <nav
+<<<<<<< Updated upstream
       className="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between text-white"
       style={{ backgroundColor: "#60ab66" }}
+=======
+      className="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between text-white bg-[#60ab66] fixed w-full top-0 left-0 z-30 shadow-lg"
+      style={{}}
+>>>>>>> Stashed changes
     >
       {/* Left: Logo + Text */}
       <div className="flex items-center space-x-3 mb-2 md:mb-0">
@@ -69,6 +74,12 @@ export default function Navbar() {
           className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}
         >
           Healthy Living
+        </a>
+        <a
+          href="/community"
+          className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}
+        >
+          Community
         </a>
         {loading ? (
           <div className="w-12 h-12 bg-gray-600 rounded-full animate-pulse"></div>
