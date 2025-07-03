@@ -101,65 +101,121 @@ const DashboardSection: React.FC = () => {
   };
 
   return (
-    <section className="min-h-screen bg-[#e0e5dc] px-6 py-16"> {/* 🌿 Background */}
-      <div className="max-w-7xl mx-auto">
-        <div className="relative overflow-hidden rounded-3xl shadow-2xl mb-16">
-          <div className="absolute inset-0 bg-gradient-to-r from-[#60ab66] via-[#97d39b] to-[#6ed076]" /> {/* 🌈 Updated hero bg */}
-
-          <div className="absolute top-0 right-0 w-96 h-96 bg-[#97d39b]/30 rounded-full blur-3xl transform translate-x-32 -translate-y-32" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-[#6ed076]/20 rounded-full blur-2xl transform -translate-x-16 translate-y-16" />
-
-          <div className="relative z-10 p-12 lg:p-16">
-            <div className="max-w-4xl">
-              <h1 className="text-6xl lg:text-8xl font-bold mb-8 text-[#2e3d27] leading-tight">
-                GROW A MUSCLE
-              </h1>
-
-              <div className="space-y-6 text-[#2e3d27]">
-                <p className="text-2xl lg:text-3xl font-medium">
-                  Ready to take control of your fitness journey?
-                </p>
-                <p className="text-xl lg:text-2xl leading-relaxed">
-                  Whether you're just starting out or leveling up, our personalized workout plans and expert resources are built just for you.
-                </p>
-                <p className="text-xl lg:text-2xl leading-relaxed">
-                  Join a supportive community that keeps you motivated, inspired, and on track.
-                </p>
+    <section className="w-full p-0 m-0">
+      {/* Full-screen Hero Section */}
+      <div
+        className="relative w-full min-h-[calc(100vh-6rem)] flex items-end lg:items-end justify-center overflow-hidden pt-28"
+        style={{
+          backgroundImage: "url('/images/fullwidthbg.jpg')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-[#60ab66]/60" />
+        <div className="relative z-10 w-full max-w-5xl px-4 flex flex-col lg:flex-row items-center lg:items-end justify-center h-full pb-12 lg:pb-20">
+          {/* Decorative vertical bar */}
+          <div className="hidden lg:block w-2 h-80 bg-[#60ab66] rounded-full mr-10 mb-8 shadow-lg" />
+          {/* Text Card */}
+          <div className="bg-white/80 backdrop-blur-md rounded-3xl shadow-2xl p-8 lg:p-14 flex flex-col gap-6 max-w-2xl w-full lg:ml-0 ml-auto text-left items-start lg:items-start lg:text-left text-center">
+            <span className="uppercase tracking-widest text-[#60ab66] font-bold text-sm lg:text-base">Unleash Your Potential</span>
+            <h1 className="text-5xl lg:text-7xl font-extrabold text-[#2e3d27] leading-tight mb-2">
+              GROW A MUSCLE
+            </h1>
+            <h2 className="text-2xl lg:text-3xl font-semibold text-[#2e3d27] mb-2">
+              Transform Your Body. Transform Your Life.
+            </h2>
+            <p className="text-lg lg:text-xl text-[#2e3d27] mb-2">
+              Start your journey with personalized plans, expert tips, and a community that lifts you higher. Whether you're a beginner or a pro, we're here to help you build strength, confidence, and lasting results.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 mt-4">
+              <button
+                onClick={handleSignUp}
+                className="bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl"
+              >
+                Start Your Journey
+              </button>
+              <a href="#features" className="bg-white border-2 border-[#60ab66] text-[#60ab66] px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#e0e5dc] transition-all duration-300 shadow-md hover:shadow-xl text-center">
+                See Features
+              </a>
+            </div>
+            <span className="text-[#60ab66] font-medium text-base mt-4">No pressure — just progress, at your own pace.</span>
+          </div>
+        </div>
+        {/* Tagline at the bottom */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 z-20">
+          <span className="bg-[#2e3d27]/80 text-white px-6 py-2 rounded-full text-lg font-semibold shadow-lg tracking-wide">Stronger Every Day</span>
+        </div>
+      </div>
+      {/* Why Choose Section */}
+      <div className="bg-white w-full py-20">
+        <div className="max-w-7xl mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+          {/* Left: Text */}
+          <div>
+            <span className="uppercase tracking-widest text-[#60ab66] font-bold text-base mb-2 block">WHY CHOOSE US</span>
+            <h2 className="text-4xl md:text-5xl font-extrabold text-[#2e3d27] mb-6 leading-tight">Why Grow A Muscle?</h2>
+            <p className="italic text-lg text-[#60ab66] mb-6">“Empowering you to build strength, confidence, and a healthier lifestyle—one workout at a time.”</p>
+            <p className="text-[#2e3d27] text-lg mb-4">Grow A Muscle is your all-in-one fitness companion, designed to help you achieve your goals with personalized workout plans, expert guidance, and a supportive community. Whether you're just starting out or looking to break through plateaus, our platform adapts to your needs and keeps you motivated.</p>
+            <p className="text-[#2e3d27] text-lg mb-4">Our certified trainers and nutritionists provide science-backed advice, while our progress tracking tools ensure you see real results. Join thousands of users who have transformed their lives and discovered the power of consistency.</p>
+            <div className="flex items-center gap-4 mt-8">
+              <div className="flex items-center">
+                <span className="text-3xl font-bold text-[#60ab66] mr-2">10,000+</span>
+                <span className="text-[#2e3d27] text-base">workouts completed</span>
               </div>
-
-              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mt-12 gap-6">
-                <p className="text-[#2e3d27] text-xl lg:text-2xl">
-                  No pressure — just progress, at your own pace.
-                </p>
-                {!user && (
-                  <button 
-                    onClick={handleSignUp}
-                    className="bg-[#60ab66] text-white px-12 py-4 rounded-2xl text-xl font-semibold hover:bg-[#6ed076] transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl"
-                  >
-                    Start Your Journey
-                  </button>
-                )}
-              </div>
+              <a href="#" className="ml-8 bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl">Learn More About Us</a>
+            </div>
+          </div>
+          {/* Right: Image with accent */}
+          <div className="relative flex justify-center items-center">
+            <div className="absolute -left-8 top-8 w-40 h-40 bg-[#60ab66]/30 rounded-2xl z-0 hidden md:block" />
+            <img src="/images/healthyliving.jpg" alt="Why Grow A Muscle" className="relative z-10 rounded-2xl shadow-2xl w-full max-w-md object-cover" />
+          </div>
+        </div>
+      </div>
+      {/* Main content container with white background */}
+      <div className="bg-white w-full min-h-[60vh] pt-16 pb-16" id="features">
+        <div className="max-w-7xl mx-auto">
+          {/* Cards */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {features.map((feature, index) => (
+              <FeatureCard
+                key={index}
+                title={feature.title}
+                description={feature.description}
+                buttonText={feature.buttonText}
+                backgroundImage={feature.backgroundImage}
+                gradientColor={feature.gradientColor}
+                onClick={feature.onClick}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+      {/* Testimonials Section */}
+      <div className="bg-white w-full py-16">
+        <div className="max-w-5xl mx-auto px-4">
+          <h2 className="text-4xl font-bold text-[#2e3d27] mb-10 text-center">What Our Users Say</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Testimonial 1 */}
+            <div className="bg-[#f6f9f6] rounded-2xl shadow-lg p-8 flex flex-col items-center text-center">
+              <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User 1" className="w-20 h-20 rounded-full mb-4 border-4 border-[#60ab66] object-cover" />
+              <p className="text-lg text-[#2e3d27] mb-4">“Grow A Muscle helped me stay consistent and motivated. The community and plans are amazing!”</p>
+              <span className="font-bold text-[#60ab66]">James P.</span>
+            </div>
+            {/* Testimonial 2 */}
+            <div className="bg-[#f6f9f6] rounded-2xl shadow-lg p-8 flex flex-col items-center text-center">
+              <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User 2" className="w-20 h-20 rounded-full mb-4 border-4 border-[#60ab66] object-cover" />
+              <p className="text-lg text-[#2e3d27] mb-4">“I love the personalized workouts and the easy progress tracking. I feel stronger every week!”</p>
+              <span className="font-bold text-[#60ab66]">Maria S.</span>
+            </div>
+            {/* Testimonial 3 */}
+            <div className="bg-[#f6f9f6] rounded-2xl shadow-lg p-8 flex flex-col items-center text-center">
+              <img src="https://randomuser.me/api/portraits/men/85.jpg" alt="User 3" className="w-20 h-20 rounded-full mb-4 border-4 border-[#60ab66] object-cover" />
+              <p className="text-lg text-[#2e3d27] mb-4">“The expert tips and support from the community keep me going. Best fitness app I've tried!”</p>
+              <span className="font-bold text-[#60ab66]">Alex R.</span>
             </div>
           </div>
         </div>
-
-        {/* Cards */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {features.map((feature, index) => (
-            <FeatureCard
-              key={index}
-              title={feature.title}
-              description={feature.description}
-              buttonText={feature.buttonText}
-              backgroundImage={feature.backgroundImage}
-              gradientColor={feature.gradientColor}
-              onClick={feature.onClick}
-            />
-          ))}
-        </div>
       </div>
-
       <style jsx>{`
         .shadow-3xl {
           box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);

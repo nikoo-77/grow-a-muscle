@@ -16,12 +16,59 @@ export default function Navbar() {
   useEffect(() => {
     const fetchProfile = async () => {
       if (user) {
+        console.log('Navbar - User object:', user);
+        console.log('Navbar - User ID:', user.id);
         const { data, error } = await supabase
           .from('users')
-          .select('height, weight, fitness_goal')
-          .eq('id', user.id ?? user.uid)
+          .select('height, weight, fitness_goal, profile_picture')
+          .eq('id', user.id)
           .single();
-        if (!error) setUserProfile(data);
+        console.log('Navbar - Query result:', { data, error });
+        
+        if (error) {
+          console.error("Navbar - Error fetching user profile:", error);
+          
+          // If the user profile doesn't exist, create it
+          if (error.code === 'PGRST116') {
+            console.log('Navbar - Creating user profile...');
+            const { data: newProfile, error: createError } = await supabase
+              .from('users')
+              .insert({
+                id: user.id,
+                first_name: '',
+                last_name: '',
+                email: user.email,
+                fitness_goal: 'muscle-building',
+                created_at: new Date().toISOString(),
+                last_login: new Date().toISOString(),
+                height: null,
+                weight: null,
+                medical_info: null,
+                profile_picture: null,
+                emergency_contacts: null
+              })
+              .select('height, weight, fitness_goal')
+              .single();
+            
+            if (createError) {
+              console.error("Navbar - Error creating user profile:", createError);
+              if (createError.code === '42501') {
+                console.warn("Navbar - RLS policy violation. Please configure RLS policies in Supabase dashboard.");
+                // Set a default profile for now
+                setUserProfile({
+                  height: null,
+                  weight: null,
+                  fitness_goal: 'muscle-building'
+                });
+              }
+            } else {
+              console.log('Navbar - User profile created:', newProfile);
+              setUserProfile(newProfile);
+            }
+          }
+        } else {
+          setUserProfile(data);
+        }
       } else {
         setUserProfile(null);
       }
@@ -31,8 +78,8 @@ export default function Navbar() {
 
   return (
     <nav
-      className="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between text-white"
-      style={{ backgroundColor: "#60ab66" }}
+      className="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between text-white bg-transparent fixed w-full top-0 left-0 z-30 backdrop-blur-md bg-black/10 shadow-lg"
+      style={{}}
     >
       {/* Left: Logo + Text */}
       <div className="flex items-center space-x-3 mb-2 md:mb-0">
@@ -74,7 +121,7 @@ export default function Navbar() {
           <div className="w-12 h-12 bg-gray-600 rounded-full animate-pulse"></div>
         ) : user ? (
           // Show profile dropdown when logged in
-          <ProfileDropdown />
+          <ProfileDropdown profilePicture={userProfile?.profile_picture} user={user} />
         ) : (
           // Show only login button when not logged in
           <a

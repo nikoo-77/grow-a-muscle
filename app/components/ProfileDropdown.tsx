@@ -5,9 +5,13 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 
-export default function ProfileDropdown() {
+interface ProfileDropdownProps {
+  profilePicture?: string | null;
+  user?: any;
+}
+
+export default function ProfileDropdown({ profilePicture, user }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const { user } = useAuth();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -45,9 +49,9 @@ export default function ProfileDropdown() {
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-center w-12 h-12 bg-white text-[#27233A] rounded-full hover:bg-gray-200 transition-colors text-2xl font-bold"
       >
-        {user?.profilePicture ? (
+        {profilePicture ? (
           <img 
-            src={user.profilePicture} 
+            src={profilePicture} 
             alt="Profile" 
             className="w-full h-full rounded-full object-cover"
           />
@@ -63,9 +67,9 @@ export default function ProfileDropdown() {
           <div className="p-4 border-b border-gray-200">
             <div className="flex items-center">
               <div className="flex items-center justify-center w-10 h-10 bg-[#505168] text-white rounded-full text-xl font-bold mr-3">
-                {user?.profilePicture ? (
+                {profilePicture ? (
                   <img 
-                    src={user.profilePicture} 
+                    src={profilePicture} 
                     alt="Profile" 
                     className="w-full h-full rounded-full object-cover"
                   />

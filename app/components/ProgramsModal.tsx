@@ -65,7 +65,7 @@ export default function ProgramsModal({ open, onClose, user, userProfile }: Prog
       const { error } = await supabase
         .from('users')
         .update({ fitness_goal: value })
-        .eq('id', user.id ?? user.uid);
+        .eq('id', user.id);
       if (!error) setSelected(value);
     } finally {
       setSaving(false);
