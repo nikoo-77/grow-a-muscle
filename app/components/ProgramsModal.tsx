@@ -1,3 +1,4 @@
+"use client";
 import { Dialog, DialogPanel, DialogTitle, DialogBackdrop } from "@headlessui/react";
 import { useState } from "react";
 import { supabase } from '../../lib/supabaseClient';

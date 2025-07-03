@@ -1,3 +1,4 @@
+"use client";
 import { Dialog, DialogPanel, DialogTitle, DialogBackdrop } from "@headlessui/react";
 import { useState, useEffect } from "react";
 
@@ -106,6 +107,17 @@ export default function BMICalculatorModal({ open, onClose, userProfile }: BMICa
             <div className="mt-6 p-4 bg-[#e0e5dc] rounded-xl text-center">
               <div className="text-lg font-semibold mb-1 text-[#2e3d27]">Calculated BMI</div>
               <div className="text-3xl font-bold text-[#60ab66]">{customBMI.toFixed(2)}</div>
+              {/* BMI Classification */}
+              <div className="mt-4 text-sm text-[#2e3d27] text-left">
+                <div className="font-semibold mb-1">BMI Classification:</div>
+                <ul className="list-disc list-inside space-y-1">
+                  <li>Underweight: BMI less than 18.5</li>
+                  <li>Normal weight: BMI 18.5 to 24.9</li>
+                  <li>Overweight: BMI 24.9 to 29.9</li>
+                  <li>Obese I: BMI 29.0 to 34.9</li>
+                  <li>Obese II: BMI greater than 34.9</li>
+                </ul>
+              </div>
             </div>
           )}
 
