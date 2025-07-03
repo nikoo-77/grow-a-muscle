@@ -1,3 +1,4 @@
+"use client";
 import { useAuth } from '../contexts/AuthContext';
 import ProfileDropdown from './ProfileDropdown';
 import { useState, useEffect } from 'react';
@@ -41,7 +42,7 @@ export default function Navbar() {
 
       {/* Right: Nav Links + Login */}
       <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
-        <a href="#" className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}>Workouts</a>
+        <a href="/workouts" className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}>Workouts</a>
         <button
           className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}
           onClick={() => setProgramsOpen(true)}
