@@ -2,7 +2,7 @@
 
 import Navbar from "../../components/Navbar";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const weekDays = [
   "Monday",
@@ -44,24 +44,35 @@ const workoutPool: Workout[] = [
   { title: "Side Bend", subtitle: "Target: Obliques\n3 sets of 30 sec hold", img: "/images/healthyliving.jpg", video: sampleVideos[3], weight: 'light' },
 ];
 
-function getRandomWorkouts(): Workout[] {
-  const count = Math.floor(Math.random() * 3) + 5; // 5-7
-  const shuffled = [...workoutPool].sort(() => 0.5 - Math.random());
-  return shuffled.slice(0, count);
-}
-
-const workoutsByDay: { [key: string]: Workout[] } = {
-  Monday: getRandomWorkouts(),
-  Tuesday: getRandomWorkouts(),
-  Wednesday: [],
-  Thursday: getRandomWorkouts(),
-  Friday: getRandomWorkouts(),
-  Saturday: getRandomWorkouts(),
-  Sunday: [],
-};
-
 export default function ImproveFlexibilityPage() {
   const [selectedDay, setSelectedDay] = useState("Monday");
+  const [workoutsByDay, setWorkoutsByDay] = useState<{ [key: string]: Workout[] }>({
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: [],
+    Saturday: [],
+    Sunday: [],
+  });
+
+  useEffect(() => {
+    function getRandomWorkouts(): Workout[] {
+      const count = Math.floor(Math.random() * 3) + 5; // 5-7
+      const shuffled = [...workoutPool].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, count);
+    }
+    setWorkoutsByDay({
+      Monday: getRandomWorkouts(),
+      Tuesday: getRandomWorkouts(),
+      Wednesday: [],
+      Thursday: getRandomWorkouts(),
+      Friday: getRandomWorkouts(),
+      Saturday: getRandomWorkouts(),
+      Sunday: [],
+    });
+  }, []);
+
   const workouts = workoutsByDay[selectedDay];
   const isRestDay = workouts.length === 0;
 
