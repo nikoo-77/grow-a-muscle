@@ -92,6 +92,15 @@ async function setupTables() {
       created_at timestamp with time zone default timezone('utc', now())
     );
   `);
+
+  // SQL to create login_history table for tracking user logins
+  await executeSQL(`
+    create table if not exists login_history (
+      id uuid primary key default gen_random_uuid(),
+      user_id uuid references auth.users(id) on delete cascade,
+      login_at timestamptz not null default timezone('utc', now())
+    );
+  `);
 }
 
 async function setupStorage() {
