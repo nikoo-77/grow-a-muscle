@@ -1,98 +1,77 @@
+"use client";
+
 import Navbar from "../components/Navbar";
 import Image from "next/image";
+import Link from "next/link";
 
-const workouts = [
+const fitnessGoals = [
   {
-    title: "Incline Dumbbell Press",
-    subtitle: "Target: Upper Chest",
+    key: "strength-training",
+    title: "Strength Training",
+    description: "Build strength and power with compound lifts and progressive overload.",
     img: "/images/dashboard-bg.jpg",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4",
   },
   {
-    title: "Strength Training",
-    subtitle: "Author",
+    key: "lose-weight",
+    title: "Lose Weight",
+    description: "Burn calories and shed fat with high-intensity and cardio-focused routines.",
     img: "/images/healthyliving.jpg",
-    video: "https://www.w3schools.com/html/movie.mp4",
   },
   {
-    title: "Strength Training",
-    subtitle: "Author",
+    key: "muscle-building",
+    title: "Muscle Building",
+    description: "Pack on lean, defined muscle with hypertrophy-focused routines.",
     img: "/images/trackprogress.jpg",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4",
   },
   {
-    title: "Strength Training",
-    subtitle: "Author",
+    key: "active-lifestyle",
+    title: "Active Lifestyle",
+    description: "Stay active and healthy with balanced, everyday movement routines.",
     img: "/images/visitcommunity.jpg",
-    video: "https://www.w3schools.com/html/movie.mp4",
   },
   {
-    title: "Strength Training",
-    subtitle: "Author",
+    key: "improve-endurance-stamina",
+    title: "Improve Endurance & Stamina",
+    description: "Boost your cardiovascular fitness and stamina with endurance training.",
     img: "/images/dashboard-bg.jpg",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4",
   },
   {
-    title: "Strength Training",
-    subtitle: "Author",
+    key: "improve-flexibility",
+    title: "Improve Flexibility",
+    description: "Enhance mobility and prevent injury with stretching and flexibility routines.",
     img: "/images/healthyliving.jpg",
-    video: "https://www.w3schools.com/html/movie.mp4",
-  },
-  {
-    title: "Strength Training",
-    subtitle: "Author",
-    img: "/images/trackprogress.jpg",
-    video: "https://www.w3schools.com/html/mov_bbb.mp4",
-  },
-  {
-    title: "Strength Training",
-    subtitle: "Author",
-    img: "/images/visitcommunity.jpg",
-    video: "https://www.w3schools.com/html/movie.mp4",
   },
 ];
 
-export default function WorkoutPage() {
+export default function WorkoutsLandingPage() {
   return (
     <>
       <Navbar />
       <main className="min-h-screen bg-white text-[var(--foreground)] flex flex-col items-center py-6 px-2 pt-32">
-        <h1 className="text-3xl font-bold text-[#60ab66] mb-2 tracking-tight">WORKOUTS</h1>
-        <section className="w-full max-w-4xl bg-white rounded-xl shadow p-6 mb-8">
-          <h2 className="text-2xl font-bold text-[#60ab66] mb-1">Muscle Building</h2>
-          <p className="text-base mb-4 text-[var(--foreground)]">
-            Pack on lean, defined muscle with hypertrophy-focused routines and dialed-in nutrition.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            {workouts.map((w, i) => (
-              <div key={i} className="bg-[#e0e5dc] rounded-xl overflow-hidden shadow flex flex-col">
-                <div className="relative w-full h-48 flex items-center justify-center bg-black">
-                  <video
-                    controls
-                    width="100%"
-                    height="100%"
-                    poster={w.img}
-                    className="object-cover w-full h-48 rounded-t-xl"
-                  >
-                    <source src={w.video} type="video/mp4" />
-                    Your browser does not support the video tag.
-                  </video>
-                </div>
-                <div className="p-4 flex-1 flex flex-col justify-between">
-                  <div>
-                    <div className="font-semibold text-lg text-[var(--foreground)]">{w.title}</div>
-                    <div className="text-sm text-gray-600">{w.subtitle}</div>
-                  </div>
-                </div>
+        <h1 className="text-3xl font-bold text-[#60ab66] mb-8 tracking-tight">Explore Fitness Goals</h1>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
+          {fitnessGoals.map((goal) => (
+            <div key={goal.key} className="bg-[#e0e5dc] rounded-xl shadow flex flex-col overflow-hidden">
+              <div className="relative w-full h-48">
+                <Image
+                  src={goal.img}
+                  alt={goal.title}
+                  fill
+                  className="object-cover"
+                />
               </div>
-            ))}
-          </div>
-          <div className="flex justify-center mt-8">
-            <button className="bg-[#e2c48e] hover:bg-[#d1b06a] text-[var(--foreground)] font-semibold py-3 px-8 rounded-xl text-lg transition">
-              FINISH SESSION
-            </button>
-          </div>
-        </section>
+              <div className="p-6 flex-1 flex flex-col justify-between">
+                <div>
+                  <div className="font-bold text-xl mb-2 text-[var(--foreground)]">{goal.title}</div>
+                  <div className="text-gray-700 mb-4">{goal.description}</div>
+                </div>
+                <Link href={`/workouts/${goal.key}`} legacyBehavior>
+                  <a className="inline-block bg-[#60ab66] hover:bg-[#4c8a53] text-white font-semibold py-2 px-6 rounded-xl text-lg transition text-center w-full">View Workouts</a>
+                </Link>
+              </div>
+            </div>
+          ))}
+        </div>
       </main>
     </>
   );

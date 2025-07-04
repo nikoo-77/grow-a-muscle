@@ -30,6 +30,22 @@ export default function Navbar() {
     fetchProfile();
   }, [user]);
 
+  // Determine the correct workouts link for the user
+  let workoutsLink = "/workouts";
+  if (userProfile && userProfile.fitness_goal) {
+    // Map fitness goal to route key
+    const goalMap: { [key: string]: string } = {
+      "strength-training": "strength-training",
+      "lose-weight": "lose-weight",
+      "muscle-building": "muscle-building",
+      "active-lifestyle": "active-lifestyle",
+      "improve-endurance-stamina": "improve-endurance-stamina",
+      "improve-flexibility": "improve-flexibility",
+    };
+    const key = goalMap[userProfile.fitness_goal] || "";
+    if (key) workoutsLink = `/workouts/${key}`;
+  }
+
   return (
     <nav
       className="px-6 py-4 flex flex-col md:flex-row md:items-center md:justify-between text-white bg-[#60ab66] fixed w-full top-0 left-0 z-30 shadow-lg"
@@ -42,7 +58,7 @@ export default function Navbar() {
 
       {/* Right: Nav Links + Login */}
       <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
-        <a href="/workouts" className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}>Workouts</a>
+        <a href={workoutsLink} className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}>Workouts</a>
         <button
           className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}
           onClick={() => setProgramsOpen(true)}
