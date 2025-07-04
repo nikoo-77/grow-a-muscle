@@ -31,6 +31,14 @@ export default function LoginPage() {
         .from("users")
         .update({ last_login: new Date().toISOString() })
         .eq("id", data.user.id);
+      // Insert login event into login_history table using session user id
+      const { data: sessionData } = await supabase.auth.getUser();
+      const userId = sessionData?.user?.id;
+      if (userId) {
+        await supabase
+          .from("login_history")
+          .insert({ user_id: userId, login_at: new Date().toISOString() });
+      }
       router.push("/");
     } catch (error: any) {
       if (error?.message?.includes("Invalid login credentials")) {
