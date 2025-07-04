@@ -50,14 +50,16 @@ export default function WorkoutsLandingPage() {
       <main className="min-h-screen bg-white text-[var(--foreground)] flex flex-col items-center py-6 px-2 pt-32">
         <h1 className="text-3xl font-bold text-[#60ab66] mb-8 tracking-tight">Explore Fitness Goals</h1>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-6xl">
-          {fitnessGoals.map((goal) => (
+          {fitnessGoals.map((goal, idx) => (
             <div key={goal.key} className="bg-[#e0e5dc] rounded-xl shadow flex flex-col overflow-hidden">
               <div className="relative w-full h-48">
                 <Image
                   src={goal.img}
                   alt={goal.title}
                   fill
+                  sizes="(max-width: 1024px) 100vw, 33vw"
                   className="object-cover"
+                  {...(idx === 0 ? { priority: true } : {})}
                 />
               </div>
               <div className="p-6 flex-1 flex flex-col justify-between">
@@ -65,8 +67,8 @@ export default function WorkoutsLandingPage() {
                   <div className="font-bold text-xl mb-2 text-[var(--foreground)]">{goal.title}</div>
                   <div className="text-gray-700 mb-4">{goal.description}</div>
                 </div>
-                <Link href={`/workouts/${goal.key}`} legacyBehavior>
-                  <a className="inline-block bg-[#60ab66] hover:bg-[#4c8a53] text-white font-semibold py-2 px-6 rounded-xl text-lg transition text-center w-full">View Workouts</a>
+                <Link href={`/workouts/${goal.key}`} className="inline-block bg-[#60ab66] hover:bg-[#4c8a53] text-white font-semibold py-2 px-6 rounded-xl text-lg transition text-center w-full">
+                  View Workouts
                 </Link>
               </div>
             </div>
