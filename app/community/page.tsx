@@ -13,7 +13,10 @@ import {
   likePost,
   unlikePost,
   fetchUserProfiles,
+  deletePost,
+  deleteComment
 } from "../../lib/supabaseCommunity";
+import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
 
 export default function CommunityPage() {
   const { user } = useAuth();
@@ -28,6 +31,14 @@ export default function CommunityPage() {
   const [userProfiles, setUserProfiles] = useState<{ [key: string]: { profile_picture?: string; first_name?: string; last_name?: string } }>({});
   const [currentUserProfile, setCurrentUserProfile] = useState<{ profile_picture?: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Modal state for deletion
+  const [deleteModal, setDeleteModal] = useState<
+    | { type: "post"; id: string }
+    | { type: "comment"; postId: string; commentId: string }
+    | null
+  >(null);
+  const [deleting, setDeleting] = useState(false);
 
   // Fetch posts on mount
   useEffect(() => {
@@ -187,6 +198,37 @@ export default function CommunityPage() {
     }
   };
 
+  const handleDeletePost = (postId: string) => {
+    setDeleteModal({ type: "post", id: postId });
+  };
+
+  const handleDeleteComment = (postId: string, commentId: string) => {
+    setDeleteModal({ type: "comment", postId, commentId });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteModal) return;
+    setDeleting(true);
+    try {
+      if (deleteModal.type === "post") {
+        await deletePost(deleteModal.id);
+        setPosts((prev) => prev.filter((p) => p.id !== deleteModal.id));
+      } else if (deleteModal.type === "comment") {
+        await deleteComment(deleteModal.commentId);
+        setComments((prev) => ({
+          ...prev,
+          [deleteModal.postId]: prev[deleteModal.postId].filter((c) => c.id !== deleteModal.commentId),
+        }));
+      }
+      setDeleteModal(null);
+    } catch (e) {
+      const err = e as any;
+      alert(err?.message || err?.details || JSON.stringify(err));
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <>
       <Navbar />
@@ -264,6 +306,17 @@ export default function CommunityPage() {
                         <span className="text-xs text-gray-400">
                           • {new Date(post.created_at).toLocaleString()}
                         </span>
+                        {/* Delete post button */}
+                        {post.user_id === user?.id && (
+                          <button
+                            onClick={() => handleDeletePost(post.id)}
+                            className="ml-2 text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 rounded transition"
+                            title="Delete post"
+                            disabled={deleting}
+                          >
+                            Delete
+                          </button>
+                        )}
                       </div>
                       <p className="text-[#222] text-base mb-3 whitespace-pre-line">{post.content}</p>
                       {post.image_url && (
@@ -346,6 +399,17 @@ export default function CommunityPage() {
                             <span className="text-xs text-gray-400">
                               {new Date(comment.created_at).toLocaleString()}
                             </span>
+                            {/* Delete comment button */}
+                            {comment.user_id === user?.id && (
+                              <button
+                                onClick={() => handleDeleteComment(post.id, comment.id)}
+                                className="ml-2 text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 rounded transition"
+                                title="Delete comment"
+                                disabled={deleting}
+                              >
+                                Delete
+                              </button>
+                            )}
                             <p className="text-[#222] text-base whitespace-pre-line">{comment.content}</p>
                           </div>
                         </div>
@@ -388,6 +452,18 @@ export default function CommunityPage() {
             })
           )}
         </div>
+        <ConfirmDeleteModal
+          open={!!deleteModal}
+          onCancel={() => setDeleteModal(null)}
+          onDelete={confirmDelete}
+          message={
+            deleteModal?.type === "post"
+              ? "Are you sure you want to delete this post? This action cannot be undone."
+              : deleteModal?.type === "comment"
+              ? "Are you sure you want to delete this comment? This action cannot be undone."
+              : undefined
+          }
+        />
         <style jsx>{`
           .shadow-3xl {
             box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
