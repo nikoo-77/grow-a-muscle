@@ -70,27 +70,37 @@ export default function CommunityPage() {
   useEffect(() => {
     const channel = supabase
       .channel("public:post_likes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, () => {
-        posts.forEach((post) => fetchLikes(post.id).then((likesArr) => setLikes((l) => ({ ...l, [post.id]: likesArr }))));
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, (payload: any) => {
+        // Only refetch likes for the specific post that changed
+        if (payload.new && payload.new.post_id) {
+          fetchLikes(payload.new.post_id).then((likesArr) => 
+            setLikes((l) => ({ ...l, [payload.new.post_id]: likesArr }))
+          );
+        }
       })
       .subscribe();
     return () => {
       channel.unsubscribe();
     };
-  }, [posts]);
+  }, []);
 
   // Real-time comments
   useEffect(() => {
     const channel = supabase
       .channel("public:comments")
-      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, () => {
-        posts.forEach((post) => fetchComments(post.id).then((commentsArr) => setComments((c) => ({ ...c, [post.id]: commentsArr }))));
+      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, (payload: any) => {
+        // Only refetch comments for the specific post that changed
+        if (payload.new && payload.new.post_id) {
+          fetchComments(payload.new.post_id).then((commentsArr) => 
+            setComments((c) => ({ ...c, [payload.new.post_id]: commentsArr }))
+          );
+        }
       })
       .subscribe();
     return () => {
       channel.unsubscribe();
     };
-  }, [posts]);
+  }, []);
 
   // Fetch user profiles for all posts and comments
   useEffect(() => {
@@ -147,6 +157,7 @@ export default function CommunityPage() {
   const handlePost = async () => {
     if (!newPost.trim() || !user) return;
     setUploading(true);
+    
     let image_url = null;
     if (imageFile) {
       try {
@@ -158,16 +169,43 @@ export default function CommunityPage() {
         return;
       }
     }
+
+    // Create temporary post for immediate display
+    const tempId = `temp-post-${Date.now()}`;
+    const tempPost = {
+      id: tempId,
+      user_id: user.id,
+      content: newPost,
+      image_url,
+      created_at: new Date().toISOString(),
+      user_profile: {
+        first_name: userProfiles[user.id]?.first_name,
+        last_name: userProfiles[user.id]?.last_name,
+        profile_picture: userProfiles[user.id]?.profile_picture
+      }
+    };
+
+    // Immediately add to posts list
+    setPosts((prev) => [tempPost, ...prev]);
+    
+    // Clear form immediately
+    setNewPost("");
+    setImageFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+
     try {
-      await createPost({ user_id: user.id, content: newPost, image_url });
-      setNewPost("");
-      setImageFile(null);
-      if (fileInputRef.current) fileInputRef.current.value = "";
+      const realPost = await createPost({ user_id: user.id, content: newPost, image_url });
+      
+      // Replace temporary post with real post data
+      setPosts((prev) => prev.map(p => p.id === tempId ? realPost : p));
     } catch (e) {
       const err = e as any;
       alert(err?.message || err?.details || JSON.stringify(err));
+      // Remove the temporary post if there was an error
+      setPosts((prev) => prev.filter(p => p.id !== tempId));
+    } finally {
+      setUploading(false);
     }
-    setUploading(false);
   };
 
   const handleLike = async (postId: string) => {
@@ -189,12 +227,50 @@ export default function CommunityPage() {
 
   const handleAddComment = async (postId: string) => {
     if (!user || !commentInputs[postId]?.trim()) return;
+    
+    const commentContent = commentInputs[postId];
+    const tempId = `temp-${Date.now()}`;
+    const newComment = {
+      id: tempId, // Temporary ID until real one comes from server
+      post_id: postId,
+      user_id: user.id,
+      content: commentContent,
+      created_at: new Date().toISOString(),
+      // Add user profile info for immediate display
+      user_profile: {
+        first_name: userProfiles[user.id]?.first_name,
+        last_name: userProfiles[user.id]?.last_name,
+        profile_picture: userProfiles[user.id]?.profile_picture
+      }
+    };
+
+    // Immediately add to local state for instant feedback
+    setComments((prev) => ({
+      ...prev,
+      [postId]: [...(prev[postId] || []), newComment]
+    }));
+    
+    // Clear input immediately
+    setCommentInputs((inputs) => ({ ...inputs, [postId]: "" }));
+
     try {
-      await addComment({ post_id: postId, user_id: user.id, content: commentInputs[postId] });
-      setCommentInputs((inputs) => ({ ...inputs, [postId]: "" }));
+      const realComment = await addComment({ post_id: postId, user_id: user.id, content: commentContent });
+      
+      // Replace temporary comment with real comment data
+      setComments((prev) => ({
+        ...prev,
+        [postId]: (prev[postId] || []).map(c => 
+          c.id === tempId ? realComment : c
+        )
+      }));
     } catch (e) {
       const err = e as any;
       alert(err?.message || err?.details || JSON.stringify(err));
+      // Remove the temporary comment if there was an error
+      setComments((prev) => ({
+        ...prev,
+        [postId]: (prev[postId] || []).filter(c => c.id !== tempId)
+      }));
     }
   };
 
@@ -283,14 +359,17 @@ export default function CommunityPage() {
             posts.map((post) => {
               const postLikes = likes[post.id] || [];
               const userLiked = user && postLikes.some((like) => like.user_id === user.id);
+              const isTempPost = post.id.startsWith('temp-post-');
+              const postUserProfile = post.user_profile || userProfiles[post.user_id];
+              
               return (
                 <div
                   key={post.id}
-                  className="bg-white rounded-3xl shadow-2xl p-6 flex flex-col gap-4 relative group hover:shadow-3xl transition-all duration-300"
+                  className={`bg-white rounded-3xl shadow-2xl p-6 flex flex-col gap-4 relative group hover:shadow-3xl transition-all duration-300 ${isTempPost ? 'opacity-75' : ''}`}
                 >
                   <div className="flex gap-4 items-start">
                     <img
-                      src={userProfiles[post.user_id]?.profile_picture || "/logo1.png"}
+                      src={postUserProfile?.profile_picture || "/logo1.png"}
                       alt="User avatar"
                       className="w-14 h-14 rounded-full border-2 border-[#60ab66] object-cover"
                     />
@@ -299,15 +378,16 @@ export default function CommunityPage() {
                         <span className="font-bold text-[#222] text-lg">
                           {post.user_id === user?.id
                             ? "You"
-                            : userProfiles[post.user_id]?.first_name || userProfiles[post.user_id]?.last_name
-                            ? `${userProfiles[post.user_id]?.first_name || ""} ${userProfiles[post.user_id]?.last_name || ""}`.trim()
+                            : postUserProfile?.first_name || postUserProfile?.last_name
+                            ? `${postUserProfile?.first_name || ""} ${postUserProfile?.last_name || ""}`.trim()
                             : "User"}
                         </span>
                         <span className="text-xs text-gray-400">
                           • {new Date(post.created_at).toLocaleString()}
+                          {isTempPost && " (sending...)"}
                         </span>
-                        {/* Delete post button */}
-                        {post.user_id === user?.id && (
+                        {/* Delete post button - only show for non-temp posts */}
+                        {post.user_id === user?.id && !isTempPost && (
                           <button
                             onClick={() => handleDeletePost(post.id)}
                             className="ml-2 text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 rounded transition"
@@ -332,7 +412,7 @@ export default function CommunityPage() {
                             userLiked ? "text-[#2e3d27]" : "text-[#60ab66] hover:text-[#2e3d27]"
                           }`}
                           onClick={() => handleLike(post.id)}
-                          disabled={liking[post.id]}
+                          disabled={liking[post.id] || isTempPost}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -355,6 +435,7 @@ export default function CommunityPage() {
                           onClick={() => {
                             document.getElementById(`comment-input-${post.id}`)?.focus();
                           }}
+                          disabled={isTempPost}
                         >
                           <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -378,42 +459,49 @@ export default function CommunityPage() {
                   {/* Comments */}
                   <div className="mt-2">
                     <div className="flex flex-col gap-2">
-                      {(comments[post.id] || []).map((comment) => (
-                        <div
-                          key={comment.id}
-                          className="flex gap-2 items-start bg-[#f6f9f6] rounded-xl px-4 py-2"
-                        >
-                          <img
-                            src={userProfiles[comment.user_id]?.profile_picture || "/logo1.png"}
-                            alt="User avatar"
-                            className="w-8 h-8 rounded-full border border-[#60ab66] object-cover"
-                          />
-                          <div>
-                            <span className="font-bold text-[#222] text-sm mr-2">
-                              {comment.user_id === user?.id
-                                ? "You"
-                                : userProfiles[comment.user_id]?.first_name || userProfiles[comment.user_id]?.last_name
-                                ? `${userProfiles[comment.user_id]?.first_name || ""} ${userProfiles[comment.user_id]?.last_name || ""}`.trim()
-                                : "User"}
-                            </span>
-                            <span className="text-xs text-gray-400">
-                              {new Date(comment.created_at).toLocaleString()}
-                            </span>
-                            {/* Delete comment button */}
-                            {comment.user_id === user?.id && (
-                              <button
-                                onClick={() => handleDeleteComment(post.id, comment.id)}
-                                className="ml-2 text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 rounded transition"
-                                title="Delete comment"
-                                disabled={deleting}
-                              >
-                                Delete
-                              </button>
-                            )}
-                            <p className="text-[#222] text-base whitespace-pre-line">{comment.content}</p>
+                      {(comments[post.id] || []).map((comment) => {
+                        // Handle both regular comments and temporary comments
+                        const isTempComment = comment.id.startsWith('temp-');
+                        const commentUserProfile = comment.user_profile || userProfiles[comment.user_id];
+                        
+                        return (
+                          <div
+                            key={comment.id}
+                            className={`flex gap-2 items-start bg-[#f6f9f6] rounded-xl px-4 py-2 ${isTempComment ? 'opacity-75' : ''}`}
+                          >
+                            <img
+                              src={commentUserProfile?.profile_picture || "/logo1.png"}
+                              alt="User avatar"
+                              className="w-8 h-8 rounded-full border border-[#60ab66] object-cover"
+                            />
+                            <div>
+                              <span className="font-bold text-[#222] text-sm mr-2">
+                                {comment.user_id === user?.id
+                                  ? "You"
+                                  : commentUserProfile?.first_name || commentUserProfile?.last_name
+                                  ? `${commentUserProfile?.first_name || ""} ${commentUserProfile?.last_name || ""}`.trim()
+                                  : "User"}
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                {new Date(comment.created_at).toLocaleString()}
+                                {isTempComment && " (sending...)"}
+                              </span>
+                              {/* Delete comment button - only show for non-temp comments */}
+                              {comment.user_id === user?.id && !isTempComment && (
+                                <button
+                                  onClick={() => handleDeleteComment(post.id, comment.id)}
+                                  className="ml-2 text-red-500 hover:text-red-700 text-xs font-bold px-2 py-1 rounded transition"
+                                  title="Delete comment"
+                                  disabled={deleting}
+                                >
+                                  Delete
+                                </button>
+                              )}
+                              <p className="text-[#222] text-base whitespace-pre-line">{comment.content}</p>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
                     </div>
                     {/* Add comment */}
                     {user && (

@@ -22,6 +22,14 @@ type Workout = {
   weight: 'light' | 'moderate' | 'heavy';
 };
 
+// Track completed exercises
+type CompletedExercise = {
+  exerciseTitle: string;
+  sets: number;
+  weight: number;
+  completedAt: string;
+};
+
 const sampleVideos = [
   "https://www.w3schools.com/html/mov_bbb.mp4",
   "https://www.w3schools.com/html/movie.mp4",
@@ -85,9 +93,67 @@ const workoutsByDay: { [key: string]: Workout[] } = {
 };
 
 export default function MuscleBuildingPage() {
-  const [selectedDay, setSelectedDay] = useState("Monday");
+  // Get current day of the week
+  const getCurrentDay = () => {
+    const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    return days[new Date().getDay()];
+  };
+
+  const [selectedDay, setSelectedDay] = useState(getCurrentDay());
+  const [completedExercises, setCompletedExercises] = useState<CompletedExercise[]>([]);
+  const [showFinishModal, setShowFinishModal] = useState(false);
+  const [currentExercise, setCurrentExercise] = useState<Workout | null>(null);
+  const [sets, setSets] = useState(3);
+  const [weight, setWeight] = useState(0);
+  const [showFinishSessionModal, setShowFinishSessionModal] = useState(false);
+  
   const workouts = workoutsByDay[selectedDay];
   const isRestDay = workouts.length === 0;
+  const isCurrentDay = selectedDay === getCurrentDay();
+  const completedCount = completedExercises.length;
+  const totalExercises = workouts.length;
+
+  const handleFinishExercise = (exercise: Workout) => {
+    setCurrentExercise(exercise);
+    setSets(3); // Default to 3 sets
+    setWeight(0); // Default to 0 weight
+    setShowFinishModal(true);
+  };
+
+  const confirmFinishExercise = () => {
+    if (currentExercise) {
+      const completedExercise: CompletedExercise = {
+        exerciseTitle: currentExercise.title,
+        sets: sets,
+        weight: weight,
+        completedAt: new Date().toISOString()
+      };
+      
+      setCompletedExercises(prev => [...prev, completedExercise]);
+      setShowFinishModal(false);
+      setCurrentExercise(null);
+    }
+  };
+
+  const isExerciseCompleted = (exerciseTitle: string) => {
+    return completedExercises.some(ex => ex.exerciseTitle === exerciseTitle);
+  };
+
+  const handleFinishSession = () => {
+    setShowFinishSessionModal(true);
+  };
+
+  const confirmFinishSession = () => {
+    // Here you could save the session data to a database or localStorage
+    console.log('Session completed:', {
+      day: selectedDay,
+      completedExercises,
+      completedAt: new Date().toISOString()
+    });
+    setShowFinishSessionModal(false);
+    // Optionally reset completed exercises for the next session
+    setCompletedExercises([]);
+  };
 
   return (
     <>
@@ -141,24 +207,128 @@ export default function MuscleBuildingPage() {
                         </div>
                       </div>
                       <button
-                        className="mt-4 bg-[#60ab66] hover:bg-[#4c8a53] text-white font-semibold py-2 px-4 rounded-xl transition"
-                        onClick={() => console.log(`Finished exercise: ${w.title} on ${selectedDay}`)}
+                        className={`mt-4 font-semibold py-2 px-4 rounded-xl transition ${
+                          isCurrentDay
+                            ? isExerciseCompleted(w.title)
+                              ? "bg-green-600 text-white cursor-default"
+                              : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
+                            : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                        }`}
+                        onClick={() => isCurrentDay && !isExerciseCompleted(w.title) && handleFinishExercise(w)}
+                        disabled={!isCurrentDay || isExerciseCompleted(w.title)}
                       >
-                        Finish Exercise
+                        {isExerciseCompleted(w.title) 
+                          ? "✓ Completed" 
+                          : "Finish Exercise"
+                        }
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
               <div className="flex justify-center mt-8">
-                <button className="bg-[#60ab66] hover:bg-[#d1b06a] text-[var(--foreground)] font-semibold py-3 px-8 rounded-xl text-lg transition">
-                  FINISH SESSION
+                <button 
+                  className={`font-semibold py-3 px-8 rounded-xl text-lg transition ${
+                    isCurrentDay 
+                      ? completedCount > 0 
+                        ? "bg-green-600 text-white cursor-pointer hover:bg-green-700" 
+                        : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
+                      : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                  }`}
+                  onClick={isCurrentDay ? handleFinishSession : undefined}
+                  disabled={!isCurrentDay}
+                >
+                  {isCurrentDay 
+                    ? completedCount > 0 
+                      ? `FINISH SESSION (${completedCount}/${totalExercises})` 
+                      : "FINISH SESSION"
+                    : "FINISH SESSION (Today Only)"
+                  }
                 </button>
               </div>
             </>
           )}
         </section>
       </main>
+
+      {/* Finish Exercise Modal */}
+      {showFinishModal && currentExercise && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <h3 className="text-2xl font-bold mb-4 text-[#2e3d27]">Complete Exercise</h3>
+            <p className="text-lg mb-6 text-[#2e3d27]">{currentExercise.title}</p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Number of Sets</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={sets}
+                  onChange={(e) => setSets(parseInt(e.target.value) || 1)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Weight Used (kg)</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  value={weight}
+                  onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
+                  placeholder="0 for bodyweight exercises"
+                />
+              </div>
+            </div>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowFinishModal(false)}
+                className="flex-1 py-2 px-4 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmFinishExercise}
+                className="flex-1 py-2 px-4 bg-[#60ab66] text-white rounded-lg font-semibold hover:bg-[#4c8a53] transition"
+              >
+                Complete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Finish Session Modal */}
+      {showFinishSessionModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
+            <h3 className="text-2xl font-bold mb-4 text-[#2e3d27]">Complete Session</h3>
+            <p className="text-lg mb-6 text-[#2e3d27]">
+              Are you sure you want to finish the session for {selectedDay}?
+            </p>
+            
+            <div className="flex gap-3 mt-6">
+              <button
+                onClick={() => setShowFinishSessionModal(false)}
+                className="flex-1 py-2 px-4 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={confirmFinishSession}
+                className="flex-1 py-2 px-4 bg-[#60ab66] text-white rounded-lg font-semibold hover:bg-[#4c8a53] transition"
+              >
+                Complete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 } 
