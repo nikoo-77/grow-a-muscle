@@ -2,7 +2,9 @@
 
 import Navbar from "../../components/Navbar";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from '../../../lib/supabaseClient';
+import { useAuth } from '../../contexts/AuthContext';
 
 const weekDays = [
   "Monday",
@@ -82,8 +84,77 @@ export default function ImproveEnduranceStaminaPage() {
   const [sets, setSets] = useState(3);
   const [weight, setWeight] = useState(0);
   const [showFinishSessionModal, setShowFinishSessionModal] = useState(false);
+  const { user } = useAuth();
+  const [sessionWeight, setSessionWeight] = useState('');
+  const [savingSession, setSavingSession] = useState(false);
+  const [personalizedWorkouts, setPersonalizedWorkouts] = useState<{ [key: string]: Workout[] } | null>(null);
+  const [loadingWorkouts, setLoadingWorkouts] = useState(true);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [repsDuration, setRepsDuration] = useState(0);
   
-  const workouts = workoutsByDay[selectedDay];
+  useEffect(() => {
+    const fetchOrCreateWorkouts = async () => {
+      if (!user) {
+        setPersonalizedWorkouts(null);
+        setLoadingWorkouts(false);
+        return;
+      }
+      setLoadingWorkouts(true);
+      const goalKey = "improve-endurance-and-stamina";
+      // Fetch all days for this user and goal
+      const { data, error } = await supabase
+        .from('user_program_workouts')
+        .select('day, workouts')
+        .eq('user_id', user.id ?? user.uid)
+        .eq('goal_key', goalKey);
+      if (!error && data && data.length === 7) {
+        // Build workoutsByDay from DB
+        const byDay: { [key: string]: Workout[] } = {};
+        data.forEach(row => {
+          byDay[row.day] = row.workouts;
+        });
+        setPersonalizedWorkouts(byDay);
+        setLoadingWorkouts(false);
+      } else {
+        // Generate, save, and use
+        const days = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+        const generated: { [key: string]: Workout[] } = {};
+        const inserts = days.map(day => {
+          const w = day === "Wednesday" || day === "Sunday" ? [] : getRandomWorkouts();
+          generated[day] = w;
+          return {
+            user_id: user.id ?? user.uid,
+            goal_key: goalKey,
+            day,
+            workouts: w,
+          };
+        });
+        await supabase.from('user_program_workouts').insert(inserts);
+        setPersonalizedWorkouts(generated);
+        setLoadingWorkouts(false);
+      }
+    };
+    fetchOrCreateWorkouts();
+    // eslint-disable-next-line
+  }, [user]);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('users')
+          .select('first_name, last_name, fitness_goal')
+          .eq('id', user.id ?? user.uid)
+          .single();
+        if (!error) setUserProfile(data);
+      } else {
+        setUserProfile(null);
+      }
+    };
+    fetchProfile();
+  }, [user]);
+
+  const workouts = personalizedWorkouts ? personalizedWorkouts[selectedDay] : workoutsByDay[selectedDay];
   const isRestDay = workouts.length === 0;
   const isCurrentDay = selectedDay === getCurrentDay();
   const completedCount = completedExercises.length;
@@ -96,7 +167,7 @@ export default function ImproveEnduranceStaminaPage() {
     setShowFinishModal(true);
   };
 
-  const confirmFinishExercise = () => {
+  const confirmFinishExercise = async () => {
     if (currentExercise) {
       const completedExercise: CompletedExercise = {
         exerciseTitle: currentExercise.title,
@@ -104,10 +175,29 @@ export default function ImproveEnduranceStaminaPage() {
         weight: weight,
         completedAt: new Date().toISOString()
       };
-      
+      // Save to exercise_log table
+      if (user) {
+        const { error } = await supabase.from('exercise_log').insert([
+          {
+            user_id: user.id || user.uid,
+            first_name: userProfile?.first_name || null,
+            last_name: userProfile?.last_name || null,
+            fitness_goal: userProfile?.fitness_goal || null,
+            exercise_name: currentExercise.title,
+            sets: sets,
+            reps_duration: repsDuration,
+            weight_lifted: weight,
+            date: new Date().toISOString(),
+          },
+        ]);
+        if (error) {
+          alert('Error saving exercise log: ' + error.message);
+        }
+      }
       setCompletedExercises(prev => [...prev, completedExercise]);
       setShowFinishModal(false);
       setCurrentExercise(null);
+      setRepsDuration(0);
     }
   };
 
@@ -119,17 +209,38 @@ export default function ImproveEnduranceStaminaPage() {
     setShowFinishSessionModal(true);
   };
 
-  const confirmFinishSession = () => {
-    // Here you could save the session data to a database or localStorage
-    console.log('Session completed:', {
-      day: selectedDay,
-      completedExercises,
-      completedAt: new Date().toISOString()
-    });
+  const confirmFinishSession = async () => {
+    if (!sessionWeight || !user) return;
+    setSavingSession(true);
+    // Save to Supabase
+    const { error } = await supabase.from('user_workouts').insert([
+      {
+        user_id: user.id || user.uid,
+        date: new Date().toISOString(),
+        weight: parseFloat(sessionWeight),
+        first_name: userProfile?.first_name || null,
+        last_name: userProfile?.last_name || null,
+        fitness_goal: userProfile?.fitness_goal || null,
+        completed_exercise: completedCount,
+        exercise_day: selectedDay,
+      },
+    ]);
+    if (error) {
+      alert('Error saving session: ' + error.message);
+    }
     setShowFinishSessionModal(false);
-    // Optionally reset completed exercises for the next session
     setCompletedExercises([]);
+    setSessionWeight('');
+    setSavingSession(false);
   };
+
+  if (loadingWorkouts) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-2xl text-[#60ab66] font-bold">Loading your workouts...</div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -246,7 +357,18 @@ export default function ImproveEnduranceStaminaPage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
                 />
               </div>
-              
+              <div>
+                <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Number of Reps/Duration</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="1000"
+                  value={repsDuration}
+                  onChange={(e) => setRepsDuration(parseInt(e.target.value) || 0)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
+                  placeholder="Enter reps or duration"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Weight Used (kg)</label>
                 <input
@@ -285,21 +407,35 @@ export default function ImproveEnduranceStaminaPage() {
           <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
             <h3 className="text-2xl font-bold mb-4 text-[#2e3d27]">Complete Session</h3>
             <p className="text-lg mb-6 text-[#2e3d27]">
-              You have completed {completedCount} out of {totalExercises} exercises.
+              You have completed <span className="font-bold">{completedCount}</span> workouts.
             </p>
-            
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Current Weight (kg)</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={sessionWeight}
+                onChange={e => setSessionWeight(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
+                placeholder="Enter your current weight"
+                required
+              />
+            </div>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowFinishSessionModal(false)}
                 className="flex-1 py-2 px-4 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition"
+                disabled={savingSession}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmFinishSession}
                 className="flex-1 py-2 px-4 bg-[#60ab66] text-white rounded-lg font-semibold hover:bg-[#4c8a53] transition"
+                disabled={!sessionWeight || savingSession}
               >
-                Complete
+                {savingSession ? 'Saving...' : 'Complete'}
               </button>
             </div>
           </div>

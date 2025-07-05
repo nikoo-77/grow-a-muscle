@@ -2,7 +2,9 @@
 
 import Navbar from "../../components/Navbar";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../../lib/supabaseClient';
 
 const weekDays = [
   "Monday",
@@ -83,12 +85,33 @@ export default function ActiveLifestylePage() {
   const [sets, setSets] = useState(3);
   const [weight, setWeight] = useState(0);
   const [showFinishSessionModal, setShowFinishSessionModal] = useState(false);
+  const [repsDuration, setRepsDuration] = useState(0);
+  const [sessionWeight, setSessionWeight] = useState('');
+  const [savingSession, setSavingSession] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const { user } = useAuth();
   
   const workouts = workoutsByDay[selectedDay];
   const isRestDay = workouts.length === 0;
   const isCurrentDay = selectedDay === getCurrentDay();
   const completedCount = completedExercises.length;
   const totalExercises = workouts.length;
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user) {
+        const { data, error } = await supabase
+          .from('users')
+          .select('first_name, last_name, fitness_goal')
+          .eq('id', user.id ?? user.uid)
+          .single();
+        if (!error) setUserProfile(data);
+      } else {
+        setUserProfile(null);
+      }
+    };
+    fetchProfile();
+  }, [user]);
 
   const handleFinishExercise = (exercise: Workout) => {
     setCurrentExercise(exercise);
@@ -97,18 +120,36 @@ export default function ActiveLifestylePage() {
     setShowFinishModal(true);
   };
 
-  const confirmFinishExercise = () => {
+  const confirmFinishExercise = async () => {
     if (currentExercise) {
-      const completedExercise: CompletedExercise = {
+      const completedExercise = {
         exerciseTitle: currentExercise.title,
         sets: sets,
         weight: weight,
         completedAt: new Date().toISOString()
       };
-      
+      if (user) {
+        const { error } = await supabase.from('exercise_log').insert([
+          {
+            user_id: user.id || user.uid,
+            first_name: userProfile?.first_name || null,
+            last_name: userProfile?.last_name || null,
+            fitness_goal: userProfile?.fitness_goal || null,
+            exercise_name: currentExercise.title,
+            sets: sets,
+            reps_duration: repsDuration,
+            weight_lifted: weight,
+            date: new Date().toISOString(),
+          },
+        ]);
+        if (error) {
+          alert('Error saving exercise log: ' + error.message);
+        }
+      }
       setCompletedExercises(prev => [...prev, completedExercise]);
       setShowFinishModal(false);
       setCurrentExercise(null);
+      setRepsDuration(0);
     }
   };
 
@@ -120,16 +161,28 @@ export default function ActiveLifestylePage() {
     setShowFinishSessionModal(true);
   };
 
-  const confirmFinishSession = () => {
-    // Here you could save the session data to a database or localStorage
-    console.log('Session completed:', {
-      day: selectedDay,
-      completedExercises,
-      completedAt: new Date().toISOString()
-    });
+  const confirmFinishSession = async () => {
+    if (!sessionWeight || !user) return;
+    setSavingSession(true);
+    const { error } = await supabase.from('user_workouts').insert([
+      {
+        user_id: user.id || user.uid,
+        date: new Date().toISOString(),
+        weight: parseFloat(sessionWeight),
+        first_name: userProfile?.first_name || null,
+        last_name: userProfile?.last_name || null,
+        fitness_goal: userProfile?.fitness_goal || null,
+        completed_exercise: completedExercises.length,
+        exercise_day: selectedDay,
+      },
+    ]);
+    if (error) {
+      alert('Error saving session: ' + error.message);
+    }
     setShowFinishSessionModal(false);
-    // Optionally reset completed exercises for the next session
     setCompletedExercises([]);
+    setSessionWeight('');
+    setSavingSession(false);
   };
 
   return (
@@ -247,7 +300,18 @@ export default function ActiveLifestylePage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
                 />
               </div>
-              
+              <div>
+                <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Number of Reps/Duration</label>
+                <input
+                  type="number"
+                  min="1"
+                  max="1000"
+                  value={repsDuration}
+                  onChange={(e) => setRepsDuration(parseInt(e.target.value) || 0)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
+                  placeholder="Enter reps or duration"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Weight Used (kg)</label>
                 <input
@@ -286,21 +350,35 @@ export default function ActiveLifestylePage() {
           <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
             <h3 className="text-2xl font-bold mb-4 text-[#2e3d27]">Complete Session</h3>
             <p className="text-lg mb-6 text-[#2e3d27]">
-              You have completed {completedCount} out of {totalExercises} exercises.
+              You have completed <span className="font-bold">{completedExercises.length}</span> workouts.
             </p>
-            
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Current Weight (kg)</label>
+              <input
+                type="number"
+                min="0"
+                step="any"
+                value={sessionWeight}
+                onChange={e => setSessionWeight(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
+                placeholder="Enter your current weight"
+                required
+              />
+            </div>
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowFinishSessionModal(false)}
                 className="flex-1 py-2 px-4 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition"
+                disabled={savingSession}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmFinishSession}
                 className="flex-1 py-2 px-4 bg-[#60ab66] text-white rounded-lg font-semibold hover:bg-[#4c8a53] transition"
+                disabled={!sessionWeight || savingSession}
               >
-                Complete
+                {savingSession ? 'Saving...' : 'Complete'}
               </button>
             </div>
           </div>

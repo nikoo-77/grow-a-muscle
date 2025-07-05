@@ -47,21 +47,15 @@ export default function PersonalInformationPage() {
   useEffect(() => {
     const fetchUserProfile = async () => {
       if (user) {
-        console.log('User object:', user);
-        console.log('User ID:', user.id);
         const { data, error } = await supabase
           .from('users')
           .select('*')
           .eq('id', user.id)
           .single();
-        console.log('Query result:', { data, error });
         
         if (error) {
-          console.error("Error fetching user profile:", error);
-          
           // If the user profile doesn't exist, create it
           if (error.code === 'PGRST116') {
-            console.log('Creating user profile...');
             const { data: newProfile, error: createError } = await supabase
               .from('users')
               .insert({
@@ -82,9 +76,7 @@ export default function PersonalInformationPage() {
               .single();
             
             if (createError) {
-              console.error("Error creating user profile:", createError);
               if (createError.code === '42501') {
-                console.warn("RLS policy violation. Please configure RLS policies in Supabase dashboard.");
                 // Set a default profile for now
                 setUserProfile({
                   id: user.id,
@@ -102,7 +94,6 @@ export default function PersonalInformationPage() {
                 } as UserProfile);
               }
             } else {
-              console.log('User profile created:', newProfile);
               setUserProfile(newProfile as UserProfile);
             }
           }

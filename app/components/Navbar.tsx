@@ -4,7 +4,6 @@ import ProfileDropdown from './ProfileDropdown';
 import { useState, useEffect } from 'react';
 import BMICalculatorModal from './BMICalculatorModal';
 import ProgramsModal from './ProgramsModal';
-import ProgressModal from './ProgressModal';
 import { supabase } from '../../lib/supabaseClient';
 
 export default function Navbar() {
@@ -33,17 +32,7 @@ export default function Navbar() {
   // Determine the correct workouts link for the user
   let workoutsLink = "/workouts";
   if (userProfile && userProfile.fitness_goal) {
-    // Map fitness goal to route key
-    const goalMap: { [key: string]: string } = {
-      "strength-training": "strength-training",
-      "lose-weight": "lose-weight",
-      "muscle-building": "muscle-building",
-      "active-lifestyle": "active-lifestyle",
-      "improve-endurance-stamina": "improve-endurance-stamina",
-      "improve-flexibility": "improve-flexibility",
-    };
-    const key = goalMap[userProfile.fitness_goal] || "";
-    if (key) workoutsLink = `/workouts/${key}`;
+    workoutsLink = `/workouts/${userProfile.fitness_goal}`;
   }
 
   return (
@@ -58,7 +47,6 @@ export default function Navbar() {
 
       {/* Right: Nav Links + Login */}
       <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
-        <a href={workoutsLink} className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}>Workouts</a>
         <button
           className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}
           onClick={() => setProgramsOpen(true)}
@@ -66,13 +54,8 @@ export default function Navbar() {
         >
           Programs
         </button>
-        <button
-          className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}
-          onClick={() => setProgressOpen(true)}
-          type="button"
-        >
-          Progress
-        </button>
+        <a href={workoutsLink} className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}>Workouts</a>
+        <a href="/progress" className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}>Progress</a>
         <button
           className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}
           onClick={() => setBmiOpen(true)}
@@ -107,7 +90,6 @@ export default function Navbar() {
       </div>
       <BMICalculatorModal open={bmiOpen} onClose={() => setBmiOpen(false)} userProfile={userProfile} />
       <ProgramsModal open={programsOpen} onClose={() => setProgramsOpen(false)} user={user} userProfile={userProfile} />
-      <ProgressModal open={progressOpen} onClose={() => setProgressOpen(false)} userId={user?.id ?? user?.uid ?? null} />
     </nav>
   );
 }

@@ -965,7 +965,7 @@ export default function CommunityPage() {
             }
           }
         `}</style>
-      </div>
+      </div>  
     </>
   );
 }
