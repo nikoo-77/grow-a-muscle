@@ -1,9 +1,8 @@
 // This script sets up the required tables and storage bucket in Supabase for the app.
 // Usage:
-//   1. npm install node-fetch @supabase/supabase-js
+//   1. npm install @supabase/supabase-js
 //   2. node scripts/setupDatabase.js
 
-const fetch = require('node-fetch');
 const { createClient } = require('@supabase/supabase-js');
 
 const supabaseUrl = 'https://coajmlurzlemzbkuuzbq.supabase.co';
@@ -79,6 +78,7 @@ async function setupTables() {
       post_id uuid references posts(id) on delete cascade,
       user_id uuid references auth.users(id) on delete cascade,
       content text not null,
+      image_url text,
       created_at timestamp with time zone default timezone('utc', now())
     );
   `);
