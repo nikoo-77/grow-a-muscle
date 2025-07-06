@@ -128,12 +128,14 @@ const DashboardSection: React.FC = () => {
               Start your journey with personalized plans, expert tips, and a community that lifts you higher. Whether you're a beginner or a pro, we're here to help you build strength, confidence, and lasting results.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-4">
-              <button
-                onClick={handleSignUp}
-                className="bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl"
-              >
-                Start Your Journey
-              </button>
+              {!user && (
+                <button
+                  onClick={handleSignUp}
+                  className="bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl"
+                >
+                  Start Your Journey
+                </button>
+              )}
               <a href="#features" className="bg-white border-2 border-[#60ab66] text-[#60ab66] px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#e0e5dc] transition-all duration-300 shadow-md hover:shadow-xl text-center">
                 See Features
               </a>

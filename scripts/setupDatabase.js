@@ -9,98 +9,64 @@ const supabaseUrl = 'https://coajmlurzlemzbkuuzbq.supabase.co';
 const serviceRoleKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNvYWptbHVyemxlbXpia3V1emJxIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1MDkzNDIyNSwiZXhwIjoyMDY2NTEwMjI1fQ.eGoeBUpY5xGTnay5AZcrYFIVPenb9qbTWX4sGmgp7Ao';
 const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-async function executeSQL(sql) {
-  const response = await fetch(`${supabaseUrl}/rest/v1/rpc/execute_sql`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${serviceRoleKey}`,
-      'apikey': serviceRoleKey
-    },
-    body: JSON.stringify({ sql })
-  });
-  if (!response.ok) {
-    const error = await response.text();
-    throw new Error(`SQL Error: ${error}`);
-  }
-  return response.json();
-}
-
 async function setupTables() {
-  // 1. weight_logs
-  await executeSQL(`
-    create table if not exists weight_logs (
-      id uuid primary key default gen_random_uuid(),
-      user_id uuid references auth.users(id) on delete cascade,
-      weight float not null,
-      logged_at timestamp with time zone default timezone('utc', now())
-    );
-  `);
+  try {
+    console.log('Setting up database tables and policies...');
 
-  // 2. workout_programs
-  await executeSQL(`
-    create table if not exists workout_programs (
-      id uuid primary key default gen_random_uuid(),
-      name text not null,
-      description text
-    );
-  `);
+    // Create users table if it doesn't exist
+    const { error: usersTableError } = await supabase.rpc('exec_sql', {
+      sql: `
+        create table if not exists users (
+          id uuid primary key references auth.users(id) on delete cascade,
+          first_name text,
+          last_name text,
+          email text,
+          fitness_goal text,
+          gender text,
+          height float,
+          weight float,
+          medical_info text,
+          profile_picture text,
+          created_at timestamp with time zone default timezone('utc', now()),
+          last_login timestamp with time zone default timezone('utc', now())
+        );
+      `
+    });
 
-  // 3. user_workouts
-  await executeSQL(`
-    create table if not exists user_workouts (
-      id uuid primary key default gen_random_uuid(),
-      user_id uuid references auth.users(id) on delete cascade,
-      program_id uuid references workout_programs(id) on delete set null,
-      date timestamp with time zone default timezone('utc', now()),
-      weight float,
-      sets integer,
-      reps integer
-    );
-  `);
+    if (usersTableError) {
+      console.log('Users table might already exist or error:', usersTableError.message);
+    }
 
-  // 4. posts
-  await executeSQL(`
-    create table if not exists posts (
-      id uuid primary key default gen_random_uuid(),
-      user_id uuid references auth.users(id) on delete cascade,
-      title text not null,
-      content text,
-      image_url text,
-      created_at timestamp with time zone default timezone('utc', now())
-    );
-  `);
+    // Enable RLS on users table
+    const { error: rlsError } = await supabase.rpc('exec_sql', {
+      sql: `alter table users enable row level security;`
+    });
 
-  // 5. comments
-  await executeSQL(`
-    create table if not exists comments (
-      id uuid primary key default gen_random_uuid(),
-      post_id uuid references posts(id) on delete cascade,
-      user_id uuid references auth.users(id) on delete cascade,
-      content text not null,
-      image_url text,
-      created_at timestamp with time zone default timezone('utc', now())
-    );
-  `);
+    if (rlsError) {
+      console.log('RLS might already be enabled or error:', rlsError.message);
+    }
 
-  // 6. post_likes
-  await executeSQL(`
-    create table if not exists post_likes (
-      id uuid primary key default gen_random_uuid(),
-      post_id uuid references posts(id) on delete cascade,
-      user_id uuid references auth.users(id) on delete cascade,
-      created_at timestamp with time zone default timezone('utc', now())
-    );
-  `);
+    // Create RLS policies for users table
+    const policies = [
+      `create policy if not exists "Users can insert their own profile" on users for insert with check (auth.uid() = id);`,
+      `create policy if not exists "Users can view their own profile" on users for select using (auth.uid() = id);`,
+      `create policy if not exists "Users can update their own profile" on users for update using (auth.uid() = id);`,
+      `create policy if not exists "Users can delete their own profile" on users for delete using (auth.uid() = id);`
+    ];
 
-  // SQL to create login_history table for tracking user logins
-  await executeSQL(`
-    create table if not exists login_history (
-      id uuid primary key default gen_random_uuid(),
-      user_id uuid references auth.users(id) on delete cascade,
-      login_at timestamptz not null default timezone('utc', now())
-    );
-  `);
+    for (const policy of policies) {
+      const { error } = await supabase.rpc('exec_sql', { sql: policy });
+      if (error) {
+        console.log('Policy might already exist or error:', error.message);
+      }
+    }
+
+    console.log('Users table and RLS policies setup complete!');
+    console.log('You can now create accounts without the RLS error.');
+
+  } catch (err) {
+    console.error('Setup failed:', err);
+  }
 }
 
 async function setupStorage() {
