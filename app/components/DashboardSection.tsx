@@ -163,7 +163,7 @@ const DashboardSection: React.FC = () => {
                 <span className="text-3xl font-bold text-[#60ab66] mr-2">10,000+</span>
                 <span className="text-[#2e3d27] text-base">workouts completed</span>
               </div>
-              <a href="#" className="ml-8 bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl">Learn More About Us</a>
+              <a href="/about" className="ml-8 bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl">Learn More About Us</a>
             </div>
           </div>
           {/* Right: Image with accent */}

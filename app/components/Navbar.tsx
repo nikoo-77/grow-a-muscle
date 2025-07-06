@@ -75,6 +75,13 @@ export default function Navbar() {
         >
           Community
         </a>
+        <a
+          href="/about"
+          className="text-2xl font-medium hover:text-blue-400"
+          style={{ color: '#fdfcf7' }}
+        >
+          About Us
+        </a>
         {loading ? (
           <div className="w-12 h-12 bg-gray-600 rounded-full animate-pulse"></div>
         ) : user ? (
