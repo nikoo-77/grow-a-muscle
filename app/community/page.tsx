@@ -17,6 +17,7 @@ import {
   deleteComment
 } from "../../lib/supabaseCommunity";
 import ConfirmDeleteModal from "../components/ConfirmDeleteModal";
+import SignInPromptModal from "../components/SignInPromptModal";
 
 // Modal for viewing images
 interface ImageModalProps {
@@ -202,6 +203,9 @@ export default function CommunityPage() {
 
   // Modal for viewing images
   const [imageModal, setImageModal] = useState<{ url: string; name?: string } | null>(null);
+  
+  // Modal for sign-in prompt
+  const [signInModal, setSignInModal] = useState<{ open: boolean; action: string }>({ open: false, action: "" });
 
   // Fetch posts on mount
   useEffect(() => {
@@ -327,7 +331,11 @@ export default function CommunityPage() {
   }, [user]);
 
   const handlePost = async () => {
-    if ((!newPost.trim() && imageFiles.length === 0) || !user) return;
+    if (!user) {
+      setSignInModal({ open: true, action: "create a post" });
+      return;
+    }
+    if (!newPost.trim() && imageFiles.length === 0) return;
     setUploading(true);
     
     let image_urls: string[] = [];
@@ -404,7 +412,10 @@ export default function CommunityPage() {
   };
 
   const handleLike = async (postId: string) => {
-    if (!user) return;
+    if (!user) {
+      setSignInModal({ open: true, action: "like posts" });
+      return;
+    }
     setLiking((l) => ({ ...l, [postId]: true }));
     
     const currentLikes = likes[postId] || [];
@@ -465,7 +476,11 @@ export default function CommunityPage() {
   };
 
   const handleAddComment = async (postId: string) => {
-    if (!user || (!commentInputs[postId]?.trim() && !commentImages[postId])) return;
+    if (!user) {
+      setSignInModal({ open: true, action: "add comments" });
+      return;
+    }
+    if (!commentInputs[postId]?.trim() && !commentImages[postId]) return;
     
     // Set commenting state to prevent double-clicks
     setCommenting((c) => ({ ...c, [postId]: true }));
@@ -578,88 +593,127 @@ export default function CommunityPage() {
           Share your progress, ask questions, and connect with others!
         </p>
         {/* Post creation box */}
-        <div className="bg-white rounded-3xl shadow-2xl p-6 mb-8 flex flex-col gap-4">
-          <div className="flex items-start gap-4">
-            <img
-              src={currentUserProfile?.profile_picture || "/logo1.png"}
-              alt="Your avatar"
-              className="w-14 h-14 rounded-full border-2 border-[#60ab66] object-cover cursor-pointer"
-              onClick={() => setImageModal({ url: currentUserProfile?.profile_picture || "/logo1.png" })}
-            />
-            <textarea
-              className="flex-1 bg-white rounded-xl p-4 text-lg border border-[#e0e5dc] focus:outline-none focus:ring-2 focus:ring-[#60ab66] resize-none min-h-[60px] text-[#222]"
-              placeholder="What's on your mind?"
-              value={newPost}
-              onChange={(e) => setNewPost(e.target.value)}
-              maxLength={280}
-              disabled={uploading}
-            />
-          </div>
-          <div className="flex items-center gap-4 mt-2">
-            <div className="flex-1 flex items-center gap-3">
-              {/* Custom file input */}
-              <div className="relative">
-                <input
-                  type="file"
-                  accept="image/*"
-                  ref={fileInputRef}
-                  className="hidden"
-                  multiple
-                  onChange={e => {
-                    const files = Array.from(e.target.files || []);
-                    setImageFiles(files.slice(0, 5)); // Limit to 5
-                  }}
-                  disabled={uploading}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploading}
-                  className="flex items-center gap-2 px-4 py-2 bg-[#60ab66]/10 text-[#60ab66] rounded-xl font-semibold transition-all duration-200 hover:bg-[#60ab66]/20 hover:scale-105 hover:shadow-lg active:scale-95 disabled:opacity-50"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  Choose Image
-                </button>
+        {user ? (
+          <div className="bg-white rounded-3xl shadow-2xl p-6 mb-8 flex flex-col gap-4">
+            <div className="flex items-start gap-4">
+              <img
+                src={currentUserProfile?.profile_picture || "/logo1.png"}
+                alt="Your avatar"
+                className="w-14 h-14 rounded-full border-2 border-[#60ab66] object-cover cursor-pointer"
+                onClick={() => setImageModal({ url: currentUserProfile?.profile_picture || "/logo1.png" })}
+              />
+              <textarea
+                className="flex-1 bg-white rounded-xl p-4 text-lg border border-[#e0e5dc] focus:outline-none focus:ring-2 focus:ring-[#60ab66] resize-none min-h-[60px] text-[#222]"
+                placeholder="What's on your mind?"
+                value={newPost}
+                onChange={(e) => setNewPost(e.target.value)}
+                maxLength={280}
+                disabled={uploading}
+              />
+            </div>
+            <div className="flex items-center gap-4 mt-2">
+              <div className="flex-1 flex items-center gap-3">
+                {/* Custom file input */}
+                <div className="relative">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={fileInputRef}
+                    className="hidden"
+                    multiple
+                    onChange={e => {
+                      const files = Array.from(e.target.files || []);
+                      setImageFiles(files.slice(0, 5)); // Limit to 5
+                    }}
+                    disabled={uploading}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploading}
+                    className="flex items-center gap-2 px-4 py-2 bg-[#60ab66]/10 text-[#60ab66] rounded-xl font-semibold transition-all duration-200 hover:bg-[#60ab66]/20 hover:scale-105 hover:shadow-lg active:scale-95 disabled:opacity-50"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 00-2 2z" />
+                    </svg>
+                    Choose Image
+                  </button>
+                </div>
+                
+                {/* Selected file display */}
+                {imageFiles.length > 0 && (
+                  <div className="flex gap-2 flex-wrap">
+                    {imageFiles.map((file, idx) => (
+                      <div key={idx} className="relative group">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt="Preview"
+                          className="w-20 h-20 object-cover rounded-lg border border-[#e0e5dc]"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setImageFiles(files => files.filter((_, i) => i !== idx));
+                            if (fileInputRef.current) fileInputRef.current.value = "";
+                          }}
+                          className="absolute top-0 right-0 bg-white/80 text-red-500 rounded-full p-1 text-xs opacity-0 group-hover:opacity-100 transition"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
-              {/* Selected file display */}
-              {imageFiles.length > 0 && (
-                <div className="flex gap-2 flex-wrap">
-                  {imageFiles.map((file, idx) => (
-                    <div key={idx} className="relative group">
-                      <img
-                        src={URL.createObjectURL(file)}
-                        alt="Preview"
-                        className="w-20 h-20 object-cover rounded-lg border border-[#e0e5dc]"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setImageFiles(files => files.filter((_, i) => i !== idx));
-                          if (fileInputRef.current) fileInputRef.current.value = "";
-                        }}
-                        className="absolute top-0 right-0 bg-white/80 text-red-500 rounded-full p-1 text-xs opacity-0 group-hover:opacity-100 transition"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <span className="text-sm text-gray-400">{newPost.length}/280</span>
+              <button
+                onClick={handlePost}
+                className="bg-[#60ab66] text-white px-6 py-2 rounded-xl font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl disabled:opacity-50"
+                disabled={(!newPost.trim() && imageFiles.length === 0) || uploading}
+              >
+                {uploading ? "Posting..." : "Post"}
+              </button>
             </div>
-            
-            <span className="text-sm text-gray-400">{newPost.length}/280</span>
-            <button
-              onClick={handlePost}
-              className="bg-[#60ab66] text-white px-6 py-2 rounded-xl font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl disabled:opacity-50"
-              disabled={(!newPost.trim() && imageFiles.length === 0) || uploading}
-            >
-              {uploading ? "Posting..." : "Post"}
-            </button>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white rounded-3xl shadow-2xl p-6 mb-8 text-center">
+            <div className="w-16 h-16 bg-[#60ab66]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-8 w-8 text-[#60ab66]"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8s-9-3.582-9-8a9 9 0 1118 0z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-xl font-bold text-[#2e3d27] mb-2">Join the Conversation!</h3>
+            <p className="text-gray-600 mb-4">
+              Sign in to share your progress, ask questions, and connect with the fitness community.
+            </p>
+            <div className="flex gap-3 justify-center">
+              <a
+                href="/signup"
+                className="px-6 py-2 bg-[#60ab66] text-white rounded-xl font-semibold hover:bg-[#6ed076] transition-colors"
+              >
+                Sign Up
+              </a>
+              <a
+                href="/login"
+                className="px-6 py-2 text-[#60ab66] border border-[#60ab66] rounded-xl font-semibold hover:bg-[#60ab66]/10 transition-colors"
+              >
+                Sign In
+              </a>
+            </div>
+          </div>
+        )}
         {/* Posts feed */}
         <div className="flex flex-col gap-6">
           {posts.length === 0 ? (
@@ -823,7 +877,7 @@ export default function CommunityPage() {
                       })}
                     </div>
                     {/* Add comment */}
-                    {user && (
+                    {user ? (
                       <div className="flex gap-2 mt-2 items-start">
                         <img
                           src={userProfiles[user.id]?.profile_picture || "/logo1.png"}
@@ -909,6 +963,26 @@ export default function CommunityPage() {
                           {commenting[post.id] ? "Commenting..." : "Comment"}
                         </button>
                       </div>
+                    ) : (
+                      <div className="mt-2 p-3 bg-[#f6f9f6] rounded-xl text-center">
+                        <p className="text-sm text-gray-600 mb-2">
+                          Sign in to join the conversation
+                        </p>
+                        <div className="flex gap-2 justify-center">
+                          <a
+                            href="/signup"
+                            className="px-3 py-1 bg-[#60ab66] text-white rounded-lg text-sm font-semibold hover:bg-[#6ed076] transition-colors"
+                          >
+                            Sign Up
+                          </a>
+                          <a
+                            href="/login"
+                            className="px-3 py-1 text-[#60ab66] border border-[#60ab66] rounded-lg text-sm font-semibold hover:bg-[#60ab66]/10 transition-colors"
+                          >
+                            Sign In
+                          </a>
+                        </div>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -933,6 +1007,11 @@ export default function CommunityPage() {
           imageUrl={imageModal?.url || ""}
           name={imageModal?.name}
           onClose={() => setImageModal(null)}
+        />
+        <SignInPromptModal
+          open={signInModal.open}
+          action={signInModal.action}
+          onClose={() => setSignInModal({ open: false, action: "" })}
         />
         <style jsx>{`
           .shadow-3xl {

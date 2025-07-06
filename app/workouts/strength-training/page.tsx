@@ -5,6 +5,13 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../../lib/supabaseClient';
+import { 
+  checkWeeklyWorkoutCompletion, 
+  markWeeklyWorkoutCompleted, 
+  getWeeklyWorkoutStatus,
+  getWeekStart,
+  getWeekEnd
+} from '../../../lib/supabaseWorkouts';
 
 const weekDays = [
   "Monday",
@@ -116,6 +123,9 @@ export default function StrengthTrainingPage() {
   const [sessionWeight, setSessionWeight] = useState('');
   const [savingSession, setSavingSession] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [weeklyStatus, setWeeklyStatus] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+  const [sessionCompleted, setSessionCompleted] = useState(false);
   const { user } = useAuth();
   
   const workouts = workoutsByDay[selectedDay];
@@ -123,22 +133,70 @@ export default function StrengthTrainingPage() {
   const isCurrentDay = selectedDay === getCurrentDay();
   const completedCount = completedExercises.length;
   const totalExercises = workouts.length;
+  
+  // Check if this day's workout is already completed this week
+  const isDayCompleted = weeklyStatus[selectedDay]?.completed || false;
+  const weekStart = getWeekStart();
+  const weekEnd = getWeekEnd();
+  
+  // Show completion status immediately after finishing session
+  const showCompletionStatus = isDayCompleted || (sessionCompleted && selectedDay === getCurrentDay());
+  
+  // Check if all exercises for this day are completed
+  const allExercisesCompleted = workouts.length > 0 && workouts.every(w => isExerciseCompleted(w.title));
 
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchData = async () => {
       if (user) {
-        const { data, error } = await supabase
-          .from('users')
-          .select('first_name, last_name, fitness_goal')
-          .eq('id', user.id ?? user.uid)
-          .single();
-        if (!error) setUserProfile(data);
+        try {
+          // Fetch user profile
+          const { data: profileData, error: profileError } = await supabase
+            .from('users')
+            .select('first_name, last_name, fitness_goal')
+            .eq('id', user.id ?? user.uid)
+            .single();
+          
+          if (!profileError) setUserProfile(profileData);
+
+          // Fetch weekly workout status
+          const status = await getWeeklyWorkoutStatus(user.id || user.uid, 'strength-training');
+          setWeeklyStatus(status);
+          
+          // Load completed exercises for current day from database
+          if (status && typeof status === 'object' && selectedDay in status && (status as any)[selectedDay]?.exercises) {
+            const dayExercises = (status as any)[selectedDay].exercises || [];
+            console.log('Loading exercises for', selectedDay, ':', dayExercises);
+            setCompletedExercises(dayExercises);
+          } else {
+            console.log('No exercises found for', selectedDay);
+            setCompletedExercises([]);
+          }
+        } catch (error) {
+          console.error('Error fetching data:', error);
+        }
       } else {
         setUserProfile(null);
+        setWeeklyStatus({});
+        setCompletedExercises([]);
       }
+      setLoading(false);
     };
-    fetchProfile();
+    fetchData();
   }, [user]);
+
+  // Separate useEffect to handle day changes
+  useEffect(() => {
+    if (user && weeklyStatus && Object.keys(weeklyStatus).length > 0) {
+      // Load completed exercises for the selected day
+      if (weeklyStatus[selectedDay]?.exercises) {
+        console.log('Day change - loading exercises for', selectedDay, ':', weeklyStatus[selectedDay].exercises);
+        setCompletedExercises(weeklyStatus[selectedDay].exercises);
+      } else {
+        console.log('Day change - no exercises for', selectedDay);
+        setCompletedExercises([]);
+      }
+    }
+  }, [selectedDay, weeklyStatus, user]);
 
   const handleFinishExercise = (exercise: Workout) => {
     setCurrentExercise(exercise);
@@ -155,24 +213,79 @@ export default function StrengthTrainingPage() {
         weight: weight,
         completedAt: new Date().toISOString()
       };
+      
       if (user) {
-        const { error } = await supabase.from('exercise_log').insert([
-          {
-            user_id: user.id || user.uid,
-            first_name: userProfile?.first_name || null,
-            last_name: userProfile?.last_name || null,
-            fitness_goal: userProfile?.fitness_goal || null,
-            exercise_name: currentExercise.title,
-            sets: sets,
-            reps_duration: repsDuration,
-            weight_lifted: weight,
-            date: new Date().toISOString(),
-          },
-        ]);
-        if (error) {
-          alert('Error saving exercise log: ' + error.message);
+        try {
+          // Save to exercise_log table
+          const { error: logError } = await supabase.from('exercise_log').insert([
+            {
+              user_id: user.id || user.uid,
+              first_name: userProfile?.first_name || null,
+              last_name: userProfile?.last_name || null,
+              fitness_goal: userProfile?.fitness_goal || null,
+              exercise_name: currentExercise.title,
+              sets: sets,
+              reps_duration: repsDuration,
+              weight_lifted: weight,
+              date: new Date().toISOString(),
+            },
+          ]);
+          
+          if (logError) {
+            console.error('Error saving exercise log:', logError);
+          }
+
+          // Save to weekly_workout_sessions table for tracking
+          const weekStart = getWeekStart();
+          const weekEnd = getWeekEnd();
+          
+          // Check if there's already a session for this day this week
+          const existingSession = await supabase
+            .from('weekly_workout_sessions')
+            .select('*')
+            .eq('user_id', user.id || user.uid)
+            .eq('workout_type', 'strength-training')
+            .eq('day_of_week', selectedDay)
+            .gte('week_start', weekStart.toISOString())
+            .lte('week_start', weekEnd.toISOString())
+            .single();
+
+          if (existingSession.data) {
+            // Update existing session with new exercise
+            const updatedExercises = [...(existingSession.data.exercises || []), completedExercise];
+            await supabase
+              .from('weekly_workout_sessions')
+              .update({ exercises: updatedExercises })
+              .eq('id', existingSession.data.id);
+          } else {
+            // Create new session
+            await supabase
+              .from('weekly_workout_sessions')
+              .insert([{
+                user_id: user.id || user.uid,
+                workout_type: 'strength-training',
+                day_of_week: selectedDay,
+                exercises: [completedExercise],
+                week_start: weekStart.toISOString(),
+                week_end: weekEnd.toISOString()
+              }]);
+          }
+
+          // Refresh weekly status to update the UI
+          const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'strength-training');
+          setWeeklyStatus(newStatus);
+          
+          // Update completed exercises for current day
+          if (newStatus && typeof newStatus === 'object' && selectedDay in newStatus && (newStatus as any)[selectedDay]?.exercises) {
+            setCompletedExercises((newStatus as any)[selectedDay].exercises);
+          }
+          
+        } catch (error) {
+          console.error('Error saving exercise:', error);
+          alert('Error saving exercise: ' + error);
         }
       }
+      
       setCompletedExercises(prev => [...prev, completedExercise]);
       setShowFinishModal(false);
       setCurrentExercise(null);
@@ -181,7 +294,13 @@ export default function StrengthTrainingPage() {
   };
 
   const isExerciseCompleted = (exerciseTitle: string) => {
-    return completedExercises.some(ex => ex.exerciseTitle === exerciseTitle);
+    // Check if exercise was completed in this session
+    const sessionCompleted = completedExercises.some(ex => ex.exerciseTitle === exerciseTitle);
+    
+    // Check if exercise was completed in a previous session this week
+    const weeklyCompleted = weeklyStatus[selectedDay]?.exercises?.some((ex: any) => ex.exerciseTitle === exerciseTitle) || false;
+    
+    return sessionCompleted || weeklyCompleted;
   };
 
   const handleFinishSession = () => {
@@ -191,49 +310,136 @@ export default function StrengthTrainingPage() {
   const confirmFinishSession = async () => {
     if (!sessionWeight || !user) return;
     setSavingSession(true);
-    const { error } = await supabase.from('user_workouts').insert([
-      {
-        user_id: user.id || user.uid,
-        date: new Date().toISOString(),
-        weight: parseFloat(sessionWeight),
-        first_name: userProfile?.first_name || null,
-        last_name: userProfile?.last_name || null,
-        fitness_goal: userProfile?.fitness_goal || null,
-        completed_exercise: completedExercises.length,
-        exercise_day: selectedDay,
-      },
-    ]);
-    if (error) {
-      alert('Error saving session: ' + error.message);
+    
+    try {
+      // Save to the existing user_workouts table for backward compatibility
+      const { error } = await supabase.from('user_workouts').insert([
+        {
+          user_id: user.id || user.uid,
+          date: new Date().toISOString(),
+          weight: parseFloat(sessionWeight),
+          first_name: userProfile?.first_name || null,
+          last_name: userProfile?.last_name || null,
+          fitness_goal: userProfile?.fitness_goal || null,
+          completed_exercise: completedExercises.length,
+          exercise_day: selectedDay,
+        },
+      ]);
+      
+      if (error) {
+        console.error('Error saving to user_workouts:', error.message);
+      }
+
+      // Refresh weekly status
+      const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'strength-training');
+      setWeeklyStatus(newStatus);
+      
+      // Update completed exercises for current day
+      if (newStatus && typeof newStatus === 'object' && selectedDay in newStatus && (newStatus as any)[selectedDay]?.exercises) {
+        setCompletedExercises((newStatus as any)[selectedDay].exercises);
+      } else {
+        setCompletedExercises([]);
+      }
+      
+      setShowFinishSessionModal(false);
+      setSessionWeight('');
+      setSessionCompleted(true);
+      
+      // Show success message for a few seconds
+      setTimeout(() => {
+        setSessionCompleted(false);
+      }, 3000);
+    } catch (error: any) {
+      alert('Error completing session: ' + error.message);
+    } finally {
+      setSavingSession(false);
     }
-    setShowFinishSessionModal(false);
-    setCompletedExercises([]);
-    setSessionWeight('');
-    setSavingSession(false);
   };
+
+  if (loading) {
+    return (
+      <>
+        <Navbar />
+        <main className="min-h-screen bg-white text-[var(--foreground)] flex flex-col items-center justify-center py-6 px-2 pt-32">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#60ab66] mx-auto mb-4"></div>
+            <p className="text-gray-600">Loading workout data...</p>
+          </div>
+        </main>
+      </>
+    );
+  }
 
   return (
     <>
       <Navbar />
       <main className="min-h-screen bg-white text-[var(--foreground)] flex flex-col items-center py-6 px-2 pt-32">
         <h1 className="text-3xl font-bold text-[#60ab66] mb-2 tracking-tight">Strength Training Workouts</h1>
+        
+        {/* Success Message */}
+        {sessionCompleted && (
+          <div className="fixed top-20 left-1/2 transform -translate-x-1/2 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg animate-bounce">
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="font-semibold">Workout session completed successfully!</span>
+            </div>
+          </div>
+        )}
+        
+        {/* Week Info */}
+        <div className="text-center mb-4 text-sm text-gray-600">
+          <p>Week of {weekStart.toLocaleDateString()} - {weekEnd.toLocaleDateString()}</p>
+          <p className="text-xs">Individual exercises lock after completion until next week</p>
+        </div>
+        
         {/* Day Selector */}
         <div className="flex justify-center gap-2 mb-6 flex-wrap">
-          {weekDays.map((day) => (
-            <button
-              key={day}
-              onClick={() => setSelectedDay(day)}
-              className={`px-4 py-2 rounded-lg font-semibold transition border-2 ${selectedDay === day ? "bg-[#60ab66] text-white border-[#60ab66]" : "bg-white text-[var(--foreground)] border-[#e0e5dc] hover:bg-[#e0e5dc]"}`}
-            >
-              {day}
-            </button>
-          ))}
+          {weekDays.map((day) => {
+            const dayWorkouts = workoutsByDay[day] || [];
+            const completedExercises = weeklyStatus[day]?.exercises || [];
+            const hasCompletedExercises = completedExercises.length > 0;
+            
+            return (
+              <button
+                key={day}
+                onClick={() => setSelectedDay(day)}
+                className={`px-4 py-2 rounded-lg font-semibold transition border-2 relative ${
+                  selectedDay === day 
+                    ? "bg-[#60ab66] text-white border-[#60ab66]" 
+                    : hasCompletedExercises
+                    ? "bg-green-100 text-green-700 border-green-300" 
+                    : "bg-white text-[var(--foreground)] border-[#e0e5dc] hover:bg-[#e0e5dc]"
+                }`}
+              >
+                {day}
+                {hasCompletedExercises && (
+                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {completedExercises.length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
         <section className="w-full max-w-4xl bg-white rounded-xl shadow p-6 mb-8">
           <h2 className="text-2xl font-bold text-[#60ab66] mb-1">{selectedDay}</h2>
           {isRestDay ? (
             <div className="text-center py-16 text-xl font-semibold text-[#60ab66]">
               Rest Day! Take time to recover and come back stronger.
+            </div>
+          ) : allExercisesCompleted ? (
+            <div className="text-center py-16">
+              <div className="text-xl font-semibold text-green-600 mb-2">
+                ✓ All {selectedDay} Exercises Completed
+              </div>
+              <div className="text-gray-600 mb-4">
+                All exercises for this day have been completed this week
+              </div>
+              <div className="text-sm text-gray-500">
+                Exercises will be available again next week
+              </div>
             </div>
           ) : (
             <>
@@ -282,22 +488,24 @@ export default function StrengthTrainingPage() {
               <div className="flex justify-center mt-8">
                 <button 
                   className={`font-semibold py-3 px-8 rounded-xl text-lg transition ${
-                    isCurrentDay 
-                      ? completedCount > 0 
-                        ? "bg-green-600 text-white cursor-pointer hover:bg-green-700" 
-                        : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
-                      : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                    completedCount > 0 
+                      ? "bg-green-600 text-white cursor-pointer hover:bg-green-700" 
+                      : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
                   }`}
-                  onClick={isCurrentDay ? handleFinishSession : undefined}
-                  disabled={!isCurrentDay}
+                  onClick={completedCount > 0 ? handleFinishSession : undefined}
+                  disabled={completedCount === 0}
                 >
-                  {isCurrentDay 
-                    ? completedCount > 0 
-                      ? `FINISH SESSION (${completedCount}/${totalExercises})` 
-                      : "FINISH SESSION"
-                    : "FINISH SESSION (Today Only)"
+                  {completedCount > 0 
+                    ? `FINISH SESSION (${completedCount}/${totalExercises})` 
+                    : "COMPLETE EXERCISES TO FINISH SESSION"
                   }
                 </button>
+                {completedCount > 0 && (
+                  <div className="text-center mt-4 text-sm text-gray-600">
+                    <p>Note: Finishing the session will save your progress but won't lock the exercises.</p>
+                    <p>Individual exercises are locked until next week after completion.</p>
+                  </div>
+                )}
               </div>
             </>
           )}
