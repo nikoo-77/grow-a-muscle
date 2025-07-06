@@ -46,18 +46,39 @@ async function setupTables() {
       console.log('RLS might already be enabled or error:', rlsError.message);
     }
 
-    // Create RLS policies for users table
+    // Drop existing policies first to avoid conflicts
+    const dropPolicies = [
+      `drop policy if exists "Users can insert their own profile" on users;`,
+      `drop policy if exists "Users can view their own profile" on users;`,
+      `drop policy if exists "Users can update their own profile" on users;`,
+      `drop policy if exists "Users can delete their own profile" on users;`
+    ];
+
+    for (const policy of dropPolicies) {
+      const { error } = await supabase.rpc('exec_sql', { sql: policy });
+      if (error) {
+        console.log('Policy drop error (might not exist):', error.message);
+      }
+    }
+
+    // Create new RLS policies for users table with more permissive insert policy
     const policies = [
-      `create policy if not exists "Users can insert their own profile" on users for insert with check (auth.uid() = id);`,
-      `create policy if not exists "Users can view their own profile" on users for select using (auth.uid() = id);`,
-      `create policy if not exists "Users can update their own profile" on users for update using (auth.uid() = id);`,
-      `create policy if not exists "Users can delete their own profile" on users for delete using (auth.uid() = id);`
+      // Allow users to insert their own profile (more permissive for signup)
+      `create policy "Users can insert their own profile" on users for insert with check (auth.uid() = id or auth.uid() is null);`,
+      // Allow users to view their own profile
+      `create policy "Users can view their own profile" on users for select using (auth.uid() = id);`,
+      // Allow users to update their own profile
+      `create policy "Users can update their own profile" on users for update using (auth.uid() = id);`,
+      // Allow users to delete their own profile
+      `create policy "Users can delete their own profile" on users for delete using (auth.uid() = id);`
     ];
 
     for (const policy of policies) {
       const { error } = await supabase.rpc('exec_sql', { sql: policy });
       if (error) {
-        console.log('Policy might already exist or error:', error.message);
+        console.log('Policy creation error:', error.message);
+      } else {
+        console.log('Policy created successfully');
       }
     }
 
