@@ -19,7 +19,7 @@ const weekDays = [
 type Workout = {
   title: string;
   subtitle: string;
-  img: string;
+  img?: string;
   video: string;
   weight: 'light' | 'moderate' | 'heavy';
 };
@@ -33,25 +33,25 @@ type CompletedExercise = {
 };
 
 const sampleVideos = [
-  "https://www.w3schools.com/html/mov_bbb.mp4",
-  "https://www.w3schools.com/html/movie.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x400_ocean_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1280x720_surfing_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1920x1080.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x540.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4"
+  "/images/Grow a Muscle/Improve Endurance and Stamina/interval.mp4", //0 Interval Running
+  "/images/Grow a Muscle/Weight Loss/jumprope.mp4", //1 Jump Rope
+  "/images/Grow a Muscle/Improve Endurance and Stamina/rowing.mp4", //2 Rowing
+  "/images/Grow a Muscle/Weight Loss/burpees.mp4", //3 Burpees
+  "/images/Grow a Muscle/Active Lifestyle/jog.mp4", //4 Long Distance Running
+  "/images/Grow a Muscle/Improve Endurance and Stamina/stairclimb.mp4", //5 Stair Climbing
+  "/images/Grow a Muscle/Weight Loss/mountain.mp4", //6 Mountain Climbers
+  "/images/Grow a Muscle/Weight Loss/boxjump.mp4", //7 Box Jumps
 ];
 
 const workoutPool: Workout[] = [
-  { title: "Interval Running", subtitle: "Target: Cardio\n3 sets of 60 seconds", img: "/images/dashboard-bg.jpg", video: sampleVideos[0], weight: 'moderate' },
-  { title: "Jump Rope", subtitle: "Target: Cardio\n3 sets of 30 seconds", img: "/images/healthyliving.jpg", video: sampleVideos[1], weight: 'light' },
-  { title: "Rowing", subtitle: "Target: Cardio, Full Body\n3 sets of 60 seconds", img: "/images/visitcommunity.jpg", video: sampleVideos[3], weight: 'moderate' },
-  { title: "Burpees", subtitle: "Target: Full Body\n3 sets of 30 seconds", img: "/images/dashboard-bg.jpg", video: sampleVideos[4], weight: 'moderate' },
-  { title: "Long Distance Running", subtitle: "Target: Cardio\n3 sets of 120 seconds", img: "/images/trackprogress.jpg", video: sampleVideos[0], weight: 'moderate' },
-  { title: "Stair Climbing", subtitle: "Target: Cardio, Legs\n3 sets of 60 seconds", img: "/images/visitcommunity.jpg", video: sampleVideos[1], weight: 'light' },
-  { title: "Mountain Climbers", subtitle: "Target: Cardio, Core\n3 sets of 30 seconds", img: "/images/healthyliving.jpg", video: sampleVideos[4], weight: 'moderate' },
-  { title: "Box Jumps", subtitle: "Target: Legs, Cardio\n3 sets of 30 seconds", img: "/images/trackprogress.jpg", video: sampleVideos[6], weight: 'moderate' },
+  { title: "Interval Running", subtitle: "Target: Cardio\n1 set of 30 minute", video: sampleVideos[0], weight: 'moderate' },
+  { title: "Jump Rope", subtitle: "Target: Cardio\n3 sets of 60 seconds", video: sampleVideos[1], weight: 'light' },
+  { title: "Rowing", subtitle: "Target: Cardio, Full Body\n3 sets of 60 seconds", video: sampleVideos[2], weight: 'moderate' },
+  { title: "Burpees", subtitle: "Target: Full Body\n3 sets of 45 seconds", video: sampleVideos[3], weight: 'moderate' },
+  { title: "Long Distance Running", subtitle: "Target: Cardio\n1 set of 30-60 minutes", video: sampleVideos[4], weight: 'moderate' },
+  { title: "Stair Climbing", subtitle: "Target: Cardio, Legs\n1 sets of 30-60 minutes", video: sampleVideos[5], weight: 'light' },
+  { title: "Mountain Climbers", subtitle: "Target: Cardio, Core\n3 sets of 45 seconds", video: sampleVideos[6], weight: 'moderate' },
+  { title: "Box Jumps", subtitle: "Target: Legs, Cardio\n3 sets of 30 seconds", video: sampleVideos[7], weight: 'moderate' },
 ];
 
 function getRandomWorkouts(): Workout[] {
@@ -272,11 +272,12 @@ export default function ImproveEnduranceStaminaPage() {
                   <div key={i} className="bg-[#e0e5dc] rounded-xl overflow-hidden shadow flex flex-col">
                     <div className="relative w-full h-48 flex items-center justify-center bg-black">
                       <video
+                        key={`${selectedDay}-${w.title}`}
                         controls
                         width="100%"
                         height="100%"
-                        poster={w.img}
-                        className="object-cover w-full h-48 rounded-t-xl"
+                        className="w-full h-full rounded-t-xl"
+                        style={{ objectFit: 'contain' }}
                       >
                         <source src={w.video} type="video/mp4" />
                         Your browser does not support the video tag.

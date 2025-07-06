@@ -19,7 +19,7 @@ const weekDays = [
 type Workout = {
   title: string;
   subtitle: string;
-  img: string;
+  img?: string;
   video: string;
   weight: 'light' | 'moderate' | 'heavy';
 };
@@ -33,59 +33,68 @@ type CompletedExercise = {
 };
 
 const sampleVideos = [
-  "https://www.w3schools.com/html/mov_bbb.mp4",
-  "https://www.w3schools.com/html/movie.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x400_ocean_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1280x720_surfing_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1920x1080.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x540.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4"
+  "/images/Grow a Muscle/Strength Training/squat.mp4", //0 Squat
+  "/images/Grow a Muscle/Strength Training/bench.mp4", //1 Bench Press
+  "/images/Grow a Muscle/Strength Training/overhead.mp4", //2 Overhead Press
+  "/images/Grow a Muscle/Strength Training/lat.mp4", //3 Lateral Raises
+  "/images/Grow a Muscle/Strength Training/abs.mp4", //4 Romanian Abs
+  "/images/Grow a Muscle/Strength Training/bulgarian.mp4", //5 Bulgarian Split Squats
+  "/images/Grow a Muscle/Strength Training/bicep.mp4", //6 Bicep Curls
+  "/images/Grow a Muscle/Strength Training/hammer.mp4", //7 Hammer Curls
+  "/images/Grow a Muscle/Strength Training/facepull.mp4", //8 Face Pull
+  "/images/Grow a Muscle/Strength Training/triceppushdown.mp4", //9 Tricep Rope Pushdown
+  "/images/Grow a Muscle/Strength Training/deadlift.mp4", //10 Deadlift
+  "/images/Grow a Muscle/Strength Training/larsen.mp4", //11 Bench Larsen Press
+  "/images/Grow a Muscle/Strength Training/legpress.mp4", //12 Leg press  
+  "/images/Grow a Muscle/Strength Training/sumo.mp4", //13 Sumo Deadlift
+  "/images/Grow a Muscle/Strength Training/inclinedb.mp4", //14 Incline Dumbbell Press
+  "/images/Grow a Muscle/Strength Training/cablerow.mp4", //15 Seated Cable Row
+  "/images/Grow a Muscle/Strength Training/latpulldown.mp4", //16 Lat Pulldown'
+  "/images/Grow a Muscle/Strength Training/shoulderpress.mp4", //17 Shoulder Press
 ];
 
 const workoutsByDay: { [key: string]: Workout[] } = {
   Monday: [
-    { title: "Squat", subtitle: "Target: Quads, Glutes, Core\n4 sets of 1-3 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[0], weight: 'heavy' },
-    { title: "Bench Press", subtitle: "Target: Chest, Triceps, Shoulders\n3 sets of 1-3 reps", img: "/images/healthyliving.jpg", video: sampleVideos[1], weight: 'heavy' },
-    { title: "Overhead Press", subtitle: "Target: Shoulders, Triceps\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[2], weight: 'moderate' },
-    { title: "Side Delt Raise", subtitle: "Target: Lateral Deltoids\n3 sets of 8 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[3], weight: 'light' },
-    { title: "Weighted Roman Abs", subtitle: "Target: Abdominals\n3 sets of 10 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[4], weight: 'light' },
+    { title: "Squat", subtitle: "Target: Quads, Glutes, Core\n4 sets of 1-3 reps", img: "", video: sampleVideos[0], weight: 'heavy' },
+    { title: "Bench Press", subtitle: "Target: Chest, Triceps, Shoulders\n3 sets of 1-3 reps", img: "", video: sampleVideos[1], weight: 'heavy' },
+    { title: "Overhead Press", subtitle: "Target: Shoulders, Triceps\n3 sets of 10 reps", img: "", video: sampleVideos[2], weight: 'moderate' },
+    { title: "Side Delt Raise", subtitle: "Target: Lateral Deltoids\n3 sets of 8 reps", img: "", video: sampleVideos[3], weight: 'light' },
+    { title: "Weighted Roman Abs", subtitle: "Target: Abdominals\n3 sets of 10 reps", img: "", video: sampleVideos[4], weight: 'light' },
 
   ],
-  Tuesday: [
-    { title: "Deadlift", subtitle: "Target: Hamstrings, Glutes, Lower Back\n4 sets of 1-3 reps", img: "/images/trackprogress.jpg", video: sampleVideos[0], weight: 'heavy' },
-    { title: "Bench Larsen Press", subtitle: "Target: Chest, Triceps\n3 sets of 2-3 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[1], weight: 'moderate' },
-    { title: "Bulgarian Split Squats", subtitle: "Target: Quads, Glutes\n3 sets of 10 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[2], weight: 'moderate' },
-    { title: "Leg Press", subtitle: "Target: Quads, Glutes\n3 sets of 8 reps", img: "/images/healthyliving.jpg", video: sampleVideos[3], weight: 'heavy' },
-    { title: "Weighted Roman Abs", subtitle: "Target: Abdominals\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[4], weight: 'light' },
+      Tuesday: [
+      { title: "Deadlift", subtitle: "Target: Hamstrings, Glutes, Lower Back\n4 sets of 1-3 reps", video: sampleVideos[10], weight: 'heavy' },
+      { title: "Bench Larsen Press", subtitle: "Target: Chest, Triceps\n3 sets of 2-3 reps", video: sampleVideos[11], weight: 'moderate' },
+      { title: "Bulgarian Split Squats", subtitle: "Target: Quads, Glutes\n3 sets of 10 reps", video: sampleVideos[5], weight: 'moderate' },
+      { title: "Leg Press", subtitle: "Target: Quads, Glutes\n3 sets of 8 reps", video: sampleVideos[12], weight: 'heavy' },
+      { title: "Weighted Roman Abs", subtitle: "Target: Abdominals\n3 sets of 10 reps", video: sampleVideos[4], weight: 'light' },
 
-  ],
+    ],
   Wednesday: [],
-  Thursday: [
-    { title: "Squat", subtitle: "Target: Quads, Glutes, Core\n4 sets of 2-4 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[0], weight: 'heavy' },
-    { title: "Bench Press", subtitle: "Target: Chest, Triceps, Shoulders\n4 sets of 2-5 reps", img: "/images/healthyliving.jpg", video: sampleVideos[1], weight: 'heavy' },
-    { title: "Incline Dumbell Press", subtitle: "Target: Upper Chest, Shoulders\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[2], weight: 'moderate' },
-    { title: "Seated Cable Row", subtitle: "Target: Upper Back, Lats\n3 sets of 8 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[3], weight: 'light' },
-    { title: "Lateral Raises", subtitle: "Target: Lateral Deltoids\n3 sets of 10 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[4], weight: 'light' },
+      Thursday: [
+      { title: "Squat", subtitle: "Target: Quads, Glutes, Core\n4 sets of 2-4 reps", video: sampleVideos[0], weight: 'heavy' },
+      { title: "Bench Press", subtitle: "Target: Chest, Triceps, Shoulders\n4 sets of 2-5 reps", video: sampleVideos[1], weight: 'heavy' },
+      { title: "Incline Dumbell Press", subtitle: "Target: Upper Chest, Shoulders\n3 sets of 10 reps", video: sampleVideos[14], weight: 'moderate' },
+      { title: "Seated Cable Row", subtitle: "Target: Upper Back, Lats\n3 sets of 8 reps", video: sampleVideos[15], weight: 'light' },
+      { title: "Lateral Raises", subtitle: "Target: Lateral Deltoids\n3 sets of 10 reps", video: sampleVideos[3], weight: 'light' },
 
-  ],
-  Friday: [
-    { title: "Sumo Deadlift", subtitle: "Target: Hamstrings, Glutes, Adductors\n4 sets of 1-3 reps", img: "/images/trackprogress.jpg", video: sampleVideos[0], weight: 'heavy' },
-    { title: "Lat Pulldown", subtitle: "Target: Lats, Upper Back\n3 sets of 10 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[1], weight: 'moderate' },
-    { title: "Bicep Curls" , subtitle: "Target: Biceps Brachii\n3 sets of 10 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[2], weight: 'light' },
-    { title: "Lat Pulldown", subtitle: "Target: Lats, Upper Back\n3 sets of 10 reps", img: "/images/healthyliving.jpg", video: sampleVideos[3], weight: 'light' },
-    { title: "Hammer Curls", subtitle: "Target: Brachialis, Brachioradialis\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[4], weight: 'light' },
-    { title: "Seated Row", subtitle: "Target: Middle Back, Rhomboids\n3 sets of 10 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[5], weight: 'light' },
+    ],
+      Friday: [
+      { title: "Sumo Deadlift", subtitle: "Target: Hamstrings, Glutes, Adductors\n4 sets of 1-3 reps", video: sampleVideos[13], weight: 'heavy' },
+      { title: "Lat Pulldown", subtitle: "Target: Lats, Upper Back\n3 sets of 10 reps", video: sampleVideos[16], weight: 'moderate' },
+      { title: "Bicep Curls" , subtitle: "Target: Biceps Brachii\n3 sets of 10 reps", video: sampleVideos[6], weight: 'light' },
+      { title: "Hammer Curls", subtitle: "Target: Brachialis, Brachioradialis\n3 sets of 10 reps", video: sampleVideos[7], weight: 'light' },
+      { title: "Seated Cable Row", subtitle: "Target: Upper Back\n3 sets of 10 reps", video: sampleVideos[15], weight: 'light' },
 
-  ],
-  Saturday: [
-    { title: "Overhead Press", subtitle: "Target: Shoulders, Triceps\n3 sets of 10 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[0], weight: 'heavy' },
-    { title: "Shoulder Press", subtitle: "Target: Shoulders\n3 sets of 8 reps", img: "/images/healthyliving.jpg", video: sampleVideos[1], weight: 'moderate' },
-    { title: "Lateral Raises", subtitle: "Target: Lateral Deltoids\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[2], weight: 'light' },
-    { title: "Face Pull", subtitle: "Target: Rear Deltoids, Upper Back\n3 sets of 10 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[3], weight: 'light' },
-    { title: "Tricep Rope Pushdown", subtitle: "Target: Triceps Brachii\n3 sets of 10 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[4], weight: 'light' },
+    ],
+      Saturday: [
+      { title: "Overhead Press", subtitle: "Target: Shoulders, Triceps\n3 sets of 10 reps", video: sampleVideos[2], weight: 'heavy' },
+      { title: "Shoulder Press", subtitle: "Target: Shoulders\n3 sets of 8 reps", video: sampleVideos[17], weight: 'moderate' },
+      { title: "Lateral Raises", subtitle: "Target: Lateral Deltoids\n3 sets of 10 reps", video: sampleVideos[3], weight: 'light' },
+      { title: "Face Pull", subtitle: "Target: Rear Deltoids, Upper Back\n3 sets of 10 reps", video: sampleVideos[8], weight: 'light' },
+      { title: "Tricep Rope Pushdown", subtitle: "Target: Triceps Brachii\n3 sets of 10 reps", video: sampleVideos[9], weight: 'light' },
 
-  ],
+    ],
   Sunday: [],
 };
 
@@ -233,11 +242,12 @@ export default function StrengthTrainingPage() {
                   <div key={i} className="bg-[#e0e5dc] rounded-xl overflow-hidden shadow flex flex-col">
                     <div className="relative w-full h-48 flex items-center justify-center bg-black">
                       <video
+                        key={`${selectedDay}-${w.title}`}
                         controls
                         width="100%"
                         height="100%"
-                        poster={w.img}
-                        className="object-cover w-full h-48 rounded-t-xl"
+                        className="w-full h-full rounded-t-xl"
+                        style={{ objectFit: 'contain' }}
                       >
                         <source src={w.video} type="video/mp4" />
                         Your browser does not support the video tag.

@@ -3,8 +3,6 @@
 import Navbar from "../../components/Navbar";
 import Image from "next/image";
 import { useState, useEffect } from "react";
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../../lib/supabaseClient';
 
 const weekDays = [
   "Monday",
@@ -19,7 +17,7 @@ const weekDays = [
 type Workout = {
   title: string;
   subtitle: string;
-  img: string;
+  img?: string;
   video: string;
   weight: 'light' | 'moderate' | 'heavy';
 };
@@ -33,25 +31,25 @@ type CompletedExercise = {
 };
 
 const sampleVideos = [
-  "https://www.w3schools.com/html/mov_bbb.mp4",
-  "https://www.w3schools.com/html/movie.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x400_ocean_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1280x720_surfing_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1920x1080.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x540.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4"
+  "/images/Grow a Muscle/Improve Flexibility/toetouch.mp4", //0 Standing Toe Touch
+  "/images/Grow a Muscle/Improve Flexibility/catcow.mp4", //1 Cat-Cow Stretch
+  "/images/Grow a Muscle/Improve Flexibility/childpose.mp4", //2 Child's Pose
+  "/images/Grow a Muscle/Improve Flexibility/butterfly.mp4", //3 Butterfly Stretch
+  "/images/Grow a Muscle/Improve Flexibility/neckstretch.mp4", //4 Neck Stretch
+  "/images/Grow a Muscle/Improve Flexibility/shoulderstretch.mp4", //5 Shoulder Stretch
+  "/images/Grow a Muscle/Improve Flexibility/tricepstretch.mp4", //6 Triceps Stretch
+  "/images/Grow a Muscle/Improve Flexibility/sidebend.mp4", //7 Side Bend
 ];
 
 const workoutPool: Workout[] = [
-  { title: "Standing Toe Touch", subtitle: "Target: Hamstrings, Lower Back\n3 sets of 30 sec hold", img: "/images/dashboard-bg.jpg", video: sampleVideos[0], weight: 'light' },
-  { title: "Cat-Cow Stretch", subtitle: "Target: Spine, Back\n3 sets of 30 sec hold", img: "/images/trackprogress.jpg", video: sampleVideos[2], weight: 'light' },
-  { title: "Child's Pose", subtitle: "Target: Back, Hips\n3 sets of 30 sec hold", img: "/images/visitcommunity.jpg", video: sampleVideos[3], weight: 'light' },
-  { title: "Butterfly Stretch", subtitle: "Target: Groin, Hips\n3 sets of 30 sec hold", img: "/images/dashboard-bg.jpg", video: sampleVideos[4], weight: 'light' },
-  { title: "Neck Stretch", subtitle: "Target: Neck\n3 sets of 30 sec hold", img: "/images/trackprogress.jpg", video: sampleVideos[0], weight: 'light' },
-  { title: "Shoulder Stretch", subtitle: "Target: Shoulders\n3 sets of 30 sec hold", img: "/images/visitcommunity.jpg", video: sampleVideos[1], weight: 'light' },
-  { title: "Triceps Stretch", subtitle: "Target: Triceps, Shoulders\n3 sets of 30 sec hold", img: "/images/dashboard-bg.jpg", video: sampleVideos[2], weight: 'light' },
-  { title: "Side Bend", subtitle: "Target: Obliques\n3 sets of 30 sec hold", img: "/images/healthyliving.jpg", video: sampleVideos[3], weight: 'light' },
+  { title: "Standing Toe Touch", subtitle: "Target: Hamstrings, Lower Back\n3 sets of 30 sec hold", video: sampleVideos[0], weight: 'light' },
+  { title: "Cat-Cow Stretch", subtitle: "Target: Spine, Back\n3 sets of 30 sec hold", video: sampleVideos[1], weight: 'light' },
+  { title: "Child's Pose", subtitle: "Target: Back, Hips\n3 sets of 30 sec hold", video: sampleVideos[2], weight: 'light' },
+  { title: "Butterfly Stretch", subtitle: "Target: Groin, Hips\n3 sets of 30 sec hold", video: sampleVideos[3], weight: 'light' },
+  { title: "Neck Stretch", subtitle: "Target: Neck\n3 sets of 30 sec hold", video: sampleVideos[4], weight: 'light' },
+  { title: "Shoulder Stretch", subtitle: "Target: Shoulders\n3 sets of 30 sec hold", video: sampleVideos[5], weight: 'light' },
+  { title: "Triceps Stretch", subtitle: "Target: Triceps, Shoulders\n3 sets of 30 sec hold", video: sampleVideos[6], weight: 'light' },
+  { title: "Side Bend", subtitle: "Target: Obliques\n3 sets of 30 sec hold", video: sampleVideos[7], weight: 'light' },
 ];
 
 export default function ImproveFlexibilityPage() {
@@ -77,11 +75,6 @@ export default function ImproveFlexibilityPage() {
     Saturday: [],
     Sunday: [],
   });
-  const [repsDuration, setRepsDuration] = useState(0);
-  const [sessionWeight, setSessionWeight] = useState('');
-  const [savingSession, setSavingSession] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const { user } = useAuth();
 
   useEffect(() => {
     function getRandomWorkouts(): Workout[] {
@@ -100,22 +93,6 @@ export default function ImproveFlexibilityPage() {
     });
   }, []);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (user) {
-        const { data, error } = await supabase
-          .from('users')
-          .select('first_name, last_name, fitness_goal')
-          .eq('id', user.id ?? user.uid)
-          .single();
-        if (!error) setUserProfile(data);
-      } else {
-        setUserProfile(null);
-      }
-    };
-    fetchProfile();
-  }, [user]);
-
   const workouts = workoutsByDay[selectedDay];
   const isRestDay = workouts.length === 0;
   const isCurrentDay = selectedDay === getCurrentDay();
@@ -129,36 +106,18 @@ export default function ImproveFlexibilityPage() {
     setShowFinishModal(true);
   };
 
-  const confirmFinishExercise = async () => {
+  const confirmFinishExercise = () => {
     if (currentExercise) {
-      const completedExercise = {
+      const completedExercise: CompletedExercise = {
         exerciseTitle: currentExercise.title,
         sets: sets,
         weight: weight,
         completedAt: new Date().toISOString()
       };
-      if (user) {
-        const { error } = await supabase.from('exercise_log').insert([
-          {
-            user_id: user.id || user.uid,
-            first_name: userProfile?.first_name || null,
-            last_name: userProfile?.last_name || null,
-            fitness_goal: userProfile?.fitness_goal || null,
-            exercise_name: currentExercise.title,
-            sets: sets,
-            reps_duration: repsDuration,
-            weight_lifted: weight,
-            date: new Date().toISOString(),
-          },
-        ]);
-        if (error) {
-          alert('Error saving exercise log: ' + error.message);
-        }
-      }
+      
       setCompletedExercises(prev => [...prev, completedExercise]);
       setShowFinishModal(false);
       setCurrentExercise(null);
-      setRepsDuration(0);
     }
   };
 
@@ -170,28 +129,16 @@ export default function ImproveFlexibilityPage() {
     setShowFinishSessionModal(true);
   };
 
-  const confirmFinishSession = async () => {
-    if (!sessionWeight || !user) return;
-    setSavingSession(true);
-    const { error } = await supabase.from('user_workouts').insert([
-      {
-        user_id: user.id || user.uid,
-        date: new Date().toISOString(),
-        weight: parseFloat(sessionWeight),
-        first_name: userProfile?.first_name || null,
-        last_name: userProfile?.last_name || null,
-        fitness_goal: userProfile?.fitness_goal || null,
-        completed_exercise: completedExercises.length,
-        exercise_day: selectedDay,
-      },
-    ]);
-    if (error) {
-      alert('Error saving session: ' + error.message);
-    }
+  const confirmFinishSession = () => {
+    // Here you could save the session data to a database or localStorage
+    console.log('Session completed:', {
+      day: selectedDay,
+      completedExercises,
+      completedAt: new Date().toISOString()
+    });
     setShowFinishSessionModal(false);
+    // Optionally reset completed exercises for the next session
     setCompletedExercises([]);
-    setSessionWeight('');
-    setSavingSession(false);
   };
 
   return (
@@ -224,11 +171,12 @@ export default function ImproveFlexibilityPage() {
                   <div key={i} className="bg-[#e0e5dc] rounded-xl overflow-hidden shadow flex flex-col">
                     <div className="relative w-full h-48 flex items-center justify-center bg-black">
                       <video
+                        key={`${selectedDay}-${w.title}`}
                         controls
                         width="100%"
                         height="100%"
-                        poster={w.img}
-                        className="object-cover w-full h-48 rounded-t-xl"
+                        className="w-full h-full rounded-t-xl"
+                        style={{ objectFit: 'contain' }}
                       >
                         <source src={w.video} type="video/mp4" />
                         Your browser does not support the video tag.
@@ -302,20 +250,7 @@ export default function ImproveFlexibilityPage() {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#60ab66]"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Number of Reps/Duration
-                </label>
-                <input
-                  type="number"
-                  min="1"
-                  max="1000"
-                  value={repsDuration}
-                  onChange={(e) => setRepsDuration(parseInt(e.target.value) || 0)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#60ab66]"
-                  placeholder="Enter reps or duration"
-                />
-              </div>
+              
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Weight Used (lbs)
@@ -355,35 +290,47 @@ export default function ImproveFlexibilityPage() {
           <div className="bg-white rounded-2xl p-6 w-full max-w-md mx-4">
             <h3 className="text-xl font-bold text-gray-800 mb-4">Finish Session</h3>
             <p className="text-gray-600 mb-4">
-              You have completed <span className="font-semibold">{completedExercises.length}</span> workouts.
+              Complete: {selectedDay}
             </p>
-            <div className="mb-4">
-              <label className="block text-sm font-medium text-gray-700 mb-2">Current Weight (kg)</label>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                value={sessionWeight}
-                onChange={e => setSessionWeight(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#60ab66]"
-                placeholder="Enter your current weight"
-                required
-              />
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Completed Exercises
+                </label>
+                <input
+                  type="text"
+                  value={completedCount.toString()}
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#60ab66]"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Total Exercises
+                </label>
+                <input
+                  type="text"
+                  value={totalExercises.toString()}
+                  readOnly
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#60ab66]"
+                />
+              </div>
             </div>
-            <div className="flex gap-3 mt-6">
+            
+            <div className="flex space-x-3 mt-6">
               <button
                 onClick={() => setShowFinishSessionModal(false)}
                 className="flex-1 py-2 px-4 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
-                disabled={savingSession}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmFinishSession}
                 className="flex-1 py-2 px-4 bg-[#60ab66] text-white rounded-lg hover:bg-[#4c8a53] transition"
-                disabled={!sessionWeight || savingSession}
               >
-                {savingSession ? 'Saving...' : 'Complete'}
+                Complete
               </button>
             </div>
           </div>
