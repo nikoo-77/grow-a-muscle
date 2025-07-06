@@ -30,7 +30,7 @@ const fitnessGoals = [
     img: "/images/visitcommunity.jpg",
   },
   {
-    key: "improve-endurance-stamina",
+    key: "improve-endurance-and-stamina",
     title: "Improve Endurance & Stamina",
     description: "Boost your cardiovascular fitness and stamina with endurance training.",
     img: "/images/dashboard-bg.jpg",

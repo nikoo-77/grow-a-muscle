@@ -19,7 +19,7 @@ const weekDays = [
 type Workout = {
   title: string;
   subtitle: string;
-  img: string;
+  img?: string;
   video: string;
   weight: 'light' | 'moderate' | 'heavy';
 };
@@ -33,64 +33,79 @@ type CompletedExercise = {
 };
 
 const sampleVideos = [
-  "https://www.w3schools.com/html/mov_bbb.mp4",
-  "https://www.w3schools.com/html/movie.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x400_ocean_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1280x720_surfing_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1920x1080.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x540.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4"
+  "/images/Grow a Muscle/Strength Training/inclinedb.mp4", //0 Incline Dumbbell Press
+  "/images/Grow a Muscle/Muscle Building/flatdb.mp4", //1 Flat Dumbbell Press
+  "/images/Grow a Muscle/Muscle Building/cableflys.mp4", //2 Cable Flys
+  "/images/Grow a Muscle/Muscle Building/pecdeck.mp4", //3 Pec Deck Fly
+  "/images/Grow a Muscle/Strength Training/shoulderpress.mp4", //4 Dumbbell Shoulder Press
+  "/images/Grow a Muscle/Strength Training/lat.mp4", //5 Lateral Raises
+  "/images/Grow a Muscle/Strength Training/triceppushdown.mp4", //6 Rope Pushdowns
+  "/images/Grow a Muscle/Muscle Building/tricepdips.mp4", //7 Triceps Dips
+  "/images/Grow a Muscle/Muscle Building/pullup.mp4", //8 Pull Ups
+  "/images/Grow a Muscle/Strength Training/latpulldown.mp4", //9 Lat Pulldowns
+  "/images/Grow a Muscle/Muscle Building/barbellrow.mp4", //10 Barbell Rows
+  "/images/Grow a Muscle/Strength Training/facepull.mp4", //11 Face Pull
+  "/images/Grow a Muscle/Strength Training/bicep.mp4", //12 Bicep Curls
+  "/images/Grow a Muscle/Strength Training/hammer.mp4", //13 Hammer Curls
+  "/images/Grow a Muscle/Strength Training/squat.mp4", //14 Barbell Squats
+  "/images/Grow a Muscle/Strength Training/bulgarian.mp4", //15 Bulgarian Split Squats
+  "/images/Grow a Muscle/Muscle Building/rdl.mp4", //16 Romanian Deadlift
+  "/images/Grow a Muscle/Muscle Building/hamstringcurl.mp4", //17 Hamstring Curls
+  "/images/Grow a Muscle/Muscle Building/legextension.mp4", //18 Leg Extension
+  "/images/Grow a Muscle/Muscle Building/cablecrunch.mp4", //19 Cable Crunches
+  "/images/Grow a Muscle/Muscle Building/russiantwist.mp4", //20 Russian Twist
+  "/images/Grow a Muscle/Muscle Building/latpullover.mp4", //21 Lat Pullovers
+  "/images/Grow a Muscle/Strength Training/cablerow.mp4", //22 Seated Cable Rows
 ];
 
 const workoutsByDay: { [key: string]: Workout[] } = {
   Monday: [
-    { title: "Incline Dumbbell Press", subtitle: "Target: Upper Chest, Anterior Deltoids\n3 sets of 10 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[0], weight: 'moderate' },
-    { title: "Flat Dumbell Press", subtitle: "Target: Middle Chest, Triceps\n3 sets of 10 reps", img: "/images/healthyliving.jpg", video: sampleVideos[1], weight: 'moderate' },
-    { title: "Cable Flys High to Low", subtitle: "Target: Lower Chest, Pectoralis Major\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[2], weight: 'light' },
-    { title: "Pec Deck Fly", subtitle: "Target: Middle Chest, Pectoralis Major\n3 sets of 10 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[3], weight: 'light' },
-    { title: "Dumbell Shoulder Press", subtitle: "Target: Anterior Deltoids, Triceps\n3 sets of 8 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[4], weight: 'moderate' },
-    { title: "Lateral Raises", subtitle: "Target: Lateral Deltoids\n3 sets of 10 reps", img: "/images/healthyliving.jpg", video: sampleVideos[5], weight: 'light' },
-    { title: "Rope pushdowns", subtitle: "Target: Triceps Brachii\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[6], weight: 'light' },
-    { title: "Triceps Dips", subtitle: "Target: Triceps (Long Head)\n3 sets of 10 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[7], weight: 'moderate' },
+    { title: "Incline Dumbbell Press", subtitle: "Target: Upper Chest, Anterior Deltoids\n3 sets of 10 reps", video: sampleVideos[0], weight: 'moderate' },
+    { title: "Flat Dumbell Press", subtitle: "Target: Middle Chest, Triceps\n3 sets of 10 reps", video: sampleVideos[1], weight: 'moderate' },
+    { title: "Cable Flys High to Low", subtitle: "Target: Lower Chest, Pectoralis Major\n3 sets of 10 reps", video: sampleVideos[2], weight: 'light' },
+    { title: "Pec Deck Fly", subtitle: "Target: Middle Chest, Pectoralis Major\n3 sets of 10 reps", video: sampleVideos[3], weight: 'light' },
+    { title: "Dumbell Shoulder Press", subtitle: "Target: Anterior Deltoids, Triceps\n3 sets of 8 reps", video: sampleVideos[4], weight: 'moderate' },
+    { title: "Lateral Raises", subtitle: "Target: Lateral Deltoids\n3 sets of 10 reps", video: sampleVideos[5], weight: 'light' },
+    { title: "Rope pushdowns", subtitle: "Target: Triceps Brachii\n3 sets of 10 reps", video: sampleVideos[6], weight: 'light' },
+    { title: "Triceps Dips", subtitle: "Target: Triceps (Long Head)\n3 sets of 10 reps", video: sampleVideos[7], weight: 'moderate' },
   ],
-  Tuesday: [
-    { title: "Pull ups", subtitle: "Target: Lats, Biceps, Forearms\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[0], weight: 'light' },
-    { title: "Lat Pulldowns", subtitle: "Target: Lats, Teres Major\n3 sets of 12 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[1], weight: 'light' },
-    { title: "Cable Lat Pullovers", subtitle: "Target: Lats, Serratus Anterior\n3 sets of 10 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[2], weight: 'moderate' },
-    { title: "Seated Cable Rows", subtitle: "Target: Upper Back, Rhomboids\n3 sets of 10 reps", img: "/images/healthyliving.jpg", video: sampleVideos[3], weight: 'moderate' },
-    { title: "Barbell Rows", subtitle: "Target: Lats, Middle Back\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[4], weight: 'light' },
-    { title: "Face Pull", subtitle: "Target: Rear Deltoids, Traps\n3 sets of 12 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[5], weight: 'moderate' },
-    { title: "Bicep Curls", subtitle: "Target: Biceps Brachii\n3 sets of 12 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[6], weight: 'light' },
-    { title: "Hammer Curls", subtitle: "Target: Brachialis, Brachioradialis\n3 sets of 12 reps", img: "/images/healthyliving.jpg", video: sampleVideos[7], weight: 'moderate' },
-  ],
+      Tuesday: [
+      { title: "Pull ups", subtitle: "Target: Lats, Biceps, Forearms\n3 sets of 10 reps", video: sampleVideos[8], weight: 'light' },
+      { title: "Lat Pulldowns", subtitle: "Target: Lats, Teres Major\n3 sets of 12 reps", video: sampleVideos[9], weight: 'light' },
+      { title: "Cable Lat Pullovers", subtitle: "Target: Lats, Serratus Anterior\n3 sets of 10 reps", video: sampleVideos[21], weight: 'moderate' },
+      { title: "Seated Cable Rows", subtitle: "Target: Upper Back, Rhomboids\n3 sets of 10 reps", video: sampleVideos[22], weight: 'moderate' },
+      { title: "Barbell Rows", subtitle: "Target: Lats, Middle Back\n3 sets of 10 reps", video: sampleVideos[10], weight: 'light' },
+      { title: "Face Pull", subtitle: "Target: Rear Deltoids, Traps\n3 sets of 12 reps", video: sampleVideos[11], weight: 'moderate' },
+      { title: "Bicep Curls", subtitle: "Target: Biceps Brachii\n3 sets of 12 reps", video: sampleVideos[12], weight: 'light' },
+      { title: "Hammer Curls", subtitle: "Target: Brachialis, Brachioradialis\n3 sets of 12 reps", video: sampleVideos[13], weight: 'moderate' },
+    ],
   Wednesday: [],
-  Thursday: [
-    { title: "Barbell Squats", subtitle: "Target: Quads, Glutes, Lower Back\n3 sets of 8 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[0], weight: 'light' },
-    { title: "Bulgarian Split Squats", subtitle: "Target: Quads, Glutes\n3 sets of 10 reps", img: "/images/healthyliving.jpg", video: sampleVideos[1], weight: 'light' },
-    { title: "Romanian Deadlift", subtitle: "Target: Hamstrings, Glutes\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[2], weight: 'moderate' },
-    { title: "Hamstring Curls ", subtitle: "Target: Hamstrings\n3 sets of 10 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[3], weight: 'light' },
-    { title: "Leg Extension", subtitle: "Target: Quadriceps\n3 sets of 10 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[4], weight: 'moderate' },
-    { title: "Cable Crunches", subtitle: "Target: Abdominals\n3 sets of 15 reps", img: "/images/healthyliving.jpg", video: sampleVideos[5], weight: 'light' },
-    { title: "Russian Twist", subtitle: "Target: Obliques, Abdominals\n3 sets of 30 seconds", img: "/images/trackprogress.jpg", video: sampleVideos[6], weight: 'moderate' },
-  ],
-  Friday: [
-    { title: "Dumbell Shoulder Press", subtitle: "Target: Anterior Deltoids, Triceps\n3 sets of 12 reps", img: "/images/trackprogress.jpg", video: sampleVideos[0], weight: 'moderate' },
-    { title: "Lateral Raise", subtitle: "Target: Lateral Deltoids\n3 sets of 15 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[1], weight: 'light' },
-    { title: "Reverse Peck Deck Fly", subtitle: "Target: Rear Deltoids, Rhomboids\n3 sets of 12 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[2], weight: 'moderate' },
-    { title: "Rope pushdowns", subtitle: "Target: Triceps Brachii\n3 sets of 12 reps", img: "/images/healthyliving.jpg", video: sampleVideos[3], weight: 'light' },
-    { title: "Triceps Dips", subtitle: "Target: Triceps (Long Head)\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[4], weight: 'moderate' },
-    { title: "Bicep Curls", subtitle: "Target: Biceps Brachii\n3 sets of 12 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[5], weight: 'light' },
-    { title: "Hammer Curls", subtitle: "Target: Brachialis, Brachioradialis\n3 sets of 12 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[6], weight: 'moderate' },
-  ],
-  Saturday: [
-    { title: "Flat Dumbell Press", subtitle: "Target: Chest, Triceps\n3 sets of 12 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[0], weight: 'light' },
-    { title: "Incline Dumbell Press", subtitle: "Target: Upper Chest, Shoulders\n3 sets of 12 reps", img: "/images/healthyliving.jpg", video: sampleVideos[1], weight: 'moderate' },
-    { title: "Peck Deck", subtitle: "Target: Chest, Shoulders\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[2], weight: 'light' },
-    { title: "Barbell Rows", subtitle: "Target: Lats, Middle Back\n3 sets of 12 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[3], weight: 'moderate' },
-    { title: "Lat Pulldowns", subtitle: "Target: Lats, Teres Major\n3 sets of 12 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[4], weight: 'light' },
-    { title: "Pull ups", subtitle: "Target: Lats, Biceps\n3 sets of 8 reps", img: "/images/healthyliving.jpg", video: sampleVideos[5], weight: 'moderate' },
-  ],
+      Thursday: [
+      { title: "Barbell Squats", subtitle: "Target: Quads, Glutes, Lower Back\n3 sets of 8 reps", video: sampleVideos[14], weight: 'light' },
+      { title: "Bulgarian Split Squats", subtitle: "Target: Quads, Glutes\n3 sets of 10 reps", video: sampleVideos[15], weight: 'light' },
+      { title: "Romanian Deadlift", subtitle: "Target: Hamstrings, Glutes\n3 sets of 10 reps", video: sampleVideos[16], weight: 'moderate' },
+      { title: "Hamstring Curls ", subtitle: "Target: Hamstrings\n3 sets of 10 reps", video: sampleVideos[17], weight: 'light' },
+      { title: "Leg Extension", subtitle: "Target: Quadriceps\n3 sets of 10 reps", video: sampleVideos[18], weight: 'moderate' },
+      { title: "Cable Crunches", subtitle: "Target: Abdominals\n3 sets of 15 reps", video: sampleVideos[19], weight: 'light' },
+      { title: "Russian Twist", subtitle: "Target: Obliques, Abdominals\n3 sets of 30 seconds", video: sampleVideos[20], weight: 'moderate' },
+    ],
+      Friday: [
+      { title: "Dumbell Shoulder Press", subtitle: "Target: Anterior Deltoids, Triceps\n3 sets of 12 reps", video: sampleVideos[4], weight: 'moderate' },
+      { title: "Lateral Raise", subtitle: "Target: Lateral Deltoids\n3 sets of 15 reps", video: sampleVideos[5], weight: 'light' },
+      { title: "Reverse Peck Deck Fly", subtitle: "Target: Rear Deltoids, Rhomboids\n3 sets of 12 reps", video: sampleVideos[3], weight: 'moderate' },
+      { title: "Rope pushdowns", subtitle: "Target: Triceps Brachii\n3 sets of 12 reps", video: sampleVideos[6], weight: 'light' },
+      { title: "Triceps Dips", subtitle: "Target: Triceps (Long Head)\n3 sets of 10 reps", video: sampleVideos[7], weight: 'moderate' },
+      { title: "Bicep Curls", subtitle: "Target: Biceps Brachii\n3 sets of 12 reps", video: sampleVideos[12], weight: 'light' },
+      { title: "Hammer Curls", subtitle: "Target: Brachialis, Brachioradialis\n3 sets of 12 reps", video: sampleVideos[13], weight: 'moderate' },
+    ],
+      Saturday: [
+      { title: "Flat Dumbell Press", subtitle: "Target: Chest, Triceps\n3 sets of 12 reps", video: sampleVideos[1], weight: 'light' },
+      { title: "Incline Dumbell Press", subtitle: "Target: Upper Chest, Shoulders\n3 sets of 12 reps", video: sampleVideos[0], weight: 'moderate' },
+      { title: "Peck Deck", subtitle: "Target: Chest, Shoulders\n3 sets of 10 reps", video: sampleVideos[3], weight: 'light' },
+      { title: "Barbell Rows", subtitle: "Target: Lats, Middle Back\n3 sets of 12 reps", video: sampleVideos[10], weight: 'moderate' },
+      { title: "Lat Pulldowns", subtitle: "Target: Lats, Teres Major\n3 sets of 12 reps", video: sampleVideos[9], weight: 'light' },
+      { title: "Pull ups", subtitle: "Target: Lats, Biceps\n3 sets of 8 reps", video: sampleVideos[8], weight: 'moderate' },
+    ],
   Sunday: [],
 };
 
@@ -238,11 +253,12 @@ export default function MuscleBuildingPage() {
                   <div key={i} className="bg-[#e0e5dc] rounded-xl overflow-hidden shadow flex flex-col">
                     <div className="relative w-full h-48 flex items-center justify-center bg-black">
                       <video
+                        key={`${selectedDay}-${w.title}`}
                         controls
                         width="100%"
                         height="100%"
-                        poster={w.img}
-                        className="object-cover w-full h-48 rounded-t-xl"
+                        className="w-full h-full rounded-t-xl"
+                        style={{ objectFit: 'contain' }}
                       >
                         <source src={w.video} type="video/mp4" />
                         Your browser does not support the video tag.

@@ -2,9 +2,7 @@
 
 import Navbar from "../../components/Navbar";
 import Image from "next/image";
-import { useState, useEffect } from "react";
-import { useAuth } from '../../contexts/AuthContext';
-import { supabase } from '../../../lib/supabaseClient';
+import { useState } from "react";
 
 const weekDays = [
   "Monday",
@@ -19,7 +17,7 @@ const weekDays = [
 type Workout = {
   title: string;
   subtitle: string;
-  img: string;
+  img?: string;
   video: string;
   weight: 'light' | 'moderate' | 'heavy';
 };
@@ -33,26 +31,27 @@ type CompletedExercise = {
 };
 
 const sampleVideos = [
-  "https://www.w3schools.com/html/mov_bbb.mp4",
-  "https://www.w3schools.com/html/movie.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x400_ocean_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1280x720_surfing_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1920x1080.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x540.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4"
+  "/images/Grow a Muscle/Active Lifestyle/briskwalk.mp4", //0 Brisk Walking
+  "/images/Grow a Muscle/Active Lifestyle/bodysquat.mp4", //1 Bodyweight Squats
+  "/images/Grow a Muscle/Active Lifestyle/pushup.mp4", //2 Push-ups
+  "/images/Grow a Muscle/Active Lifestyle/calfraise.mp4", //3 Standing Calf Raise
+  "/images/Grow a Muscle/Active Lifestyle/jog.mp4", //4 Jogging
+  "/images/Grow a Muscle/Active Lifestyle/lunges.mp4", //5 Lunges
+  "/images/Grow a Muscle/Active Lifestyle/inclinepushup.mp4", //6 Incline Push-ups
+  "/images/Grow a Muscle/Active Lifestyle/stadingside.mp4", //7 Standing Side Leg Raise
+  "/images/Grow a Muscle/Active Lifestyle/stepup.mp4", //8 Step-ups
 ];
 
 const workoutPool: Workout[] = [
-  { title: "Brisk Walking", subtitle: "Target: Cardio\n3 sets of 60 seconds", img: "/images/dashboard-bg.jpg", video: sampleVideos[0], weight: 'light' },
-  { title: "Bodyweight Squats", subtitle: "Target: Quads, Glutes\n3 sets of 12 reps", img: "/images/healthyliving.jpg", video: sampleVideos[1], weight: 'light' },
-  { title: "Push-ups", subtitle: "Target: Chest, Triceps\n3 sets of 10 reps", img: "/images/trackprogress.jpg", video: sampleVideos[2], weight: 'moderate' },
-  { title: "Standing Calf Raise", subtitle: "Target: Calves\n3 sets of 12 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[3], weight: 'light' },
-  { title: "Jogging", subtitle: "Target: Cardio\n3 sets of 60 seconds", img: "/images/trackprogress.jpg", video: sampleVideos[0], weight: 'light' },
-  { title: "Lunges", subtitle: "Target: Quads, Glutes\n3 sets of 10 reps", img: "/images/visitcommunity.jpg", video: sampleVideos[1], weight: 'light' },
-  { title: "Incline Push-ups", subtitle: "Target: Chest, Triceps\n3 sets of 10 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[2], weight: 'moderate' },
-  { title: "Standing Side Leg Raise", subtitle: "Target: Hips\n3 sets of 10 reps", img: "/images/healthyliving.jpg", video: sampleVideos[3], weight: 'light' },
-  { title: "Step-ups", subtitle: "Target: Quads, Glutes\n3 sets of 10 reps", img: "/images/dashboard-bg.jpg", video: sampleVideos[4], weight: 'light' },
+  { title: "Brisk Walking", subtitle: "Target: Cardio\n3 sets of 60 seconds", video: sampleVideos[0], weight: 'light' },
+  { title: "Bodyweight Squats", subtitle: "Target: Quads, Glutes\n3 sets of 12 reps", video: sampleVideos[1], weight: 'light' },
+  { title: "Push-ups", subtitle: "Target: Chest, Triceps\n3 sets of 10 reps", video: sampleVideos[2], weight: 'moderate' },
+  { title: "Standing Calf Raise", subtitle: "Target: Calves\n3 sets of 12 reps", video: sampleVideos[3], weight: 'light' },
+  { title: "Jogging", subtitle: "Target: Cardio\n1 set of 15-30 mins", video: sampleVideos[4], weight: 'light' },
+  { title: "Lunges", subtitle: "Target: Quads, Glutes\n3 sets of 10 reps", video: sampleVideos[5], weight: 'light' },
+  { title: "Incline Push-ups", subtitle: "Target: Chest, Triceps\n3 sets of 10 reps", video: sampleVideos[6], weight: 'moderate' },
+  { title: "Standing Side Leg Raise", subtitle: "Target: Hips\n3 sets of 10 reps", video: sampleVideos[7], weight: 'light' },
+  { title: "Step-ups", subtitle: "Target: Quads, Glutes\n3 sets of 10 reps", video: sampleVideos[8], weight: 'light' },
 ];
 
 function getRandomWorkouts(): Workout[] {
@@ -85,33 +84,12 @@ export default function ActiveLifestylePage() {
   const [sets, setSets] = useState(3);
   const [weight, setWeight] = useState(0);
   const [showFinishSessionModal, setShowFinishSessionModal] = useState(false);
-  const [repsDuration, setRepsDuration] = useState(0);
-  const [sessionWeight, setSessionWeight] = useState('');
-  const [savingSession, setSavingSession] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const { user } = useAuth();
   
   const workouts = workoutsByDay[selectedDay];
   const isRestDay = workouts.length === 0;
   const isCurrentDay = selectedDay === getCurrentDay();
   const completedCount = completedExercises.length;
   const totalExercises = workouts.length;
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      if (user) {
-        const { data, error } = await supabase
-          .from('users')
-          .select('first_name, last_name, fitness_goal')
-          .eq('id', user.id ?? user.uid)
-          .single();
-        if (!error) setUserProfile(data);
-      } else {
-        setUserProfile(null);
-      }
-    };
-    fetchProfile();
-  }, [user]);
 
   const handleFinishExercise = (exercise: Workout) => {
     setCurrentExercise(exercise);
@@ -120,36 +98,18 @@ export default function ActiveLifestylePage() {
     setShowFinishModal(true);
   };
 
-  const confirmFinishExercise = async () => {
+  const confirmFinishExercise = () => {
     if (currentExercise) {
-      const completedExercise = {
+      const completedExercise: CompletedExercise = {
         exerciseTitle: currentExercise.title,
         sets: sets,
         weight: weight,
         completedAt: new Date().toISOString()
       };
-      if (user) {
-        const { error } = await supabase.from('exercise_log').insert([
-          {
-            user_id: user.id || user.uid,
-            first_name: userProfile?.first_name || null,
-            last_name: userProfile?.last_name || null,
-            fitness_goal: userProfile?.fitness_goal || null,
-            exercise_name: currentExercise.title,
-            sets: sets,
-            reps_duration: repsDuration,
-            weight_lifted: weight,
-            date: new Date().toISOString(),
-          },
-        ]);
-        if (error) {
-          alert('Error saving exercise log: ' + error.message);
-        }
-      }
+      
       setCompletedExercises(prev => [...prev, completedExercise]);
       setShowFinishModal(false);
       setCurrentExercise(null);
-      setRepsDuration(0);
     }
   };
 
@@ -161,28 +121,16 @@ export default function ActiveLifestylePage() {
     setShowFinishSessionModal(true);
   };
 
-  const confirmFinishSession = async () => {
-    if (!sessionWeight || !user) return;
-    setSavingSession(true);
-    const { error } = await supabase.from('user_workouts').insert([
-      {
-        user_id: user.id || user.uid,
-        date: new Date().toISOString(),
-        weight: parseFloat(sessionWeight),
-        first_name: userProfile?.first_name || null,
-        last_name: userProfile?.last_name || null,
-        fitness_goal: userProfile?.fitness_goal || null,
-        completed_exercise: completedExercises.length,
-        exercise_day: selectedDay,
-      },
-    ]);
-    if (error) {
-      alert('Error saving session: ' + error.message);
-    }
+  const confirmFinishSession = () => {
+    // Here you could save the session data to a database or localStorage
+    console.log('Session completed:', {
+      day: selectedDay,
+      completedExercises,
+      completedAt: new Date().toISOString()
+    });
     setShowFinishSessionModal(false);
+    // Optionally reset completed exercises for the next session
     setCompletedExercises([]);
-    setSessionWeight('');
-    setSavingSession(false);
   };
 
   return (
@@ -215,11 +163,12 @@ export default function ActiveLifestylePage() {
                   <div key={i} className="bg-[#e0e5dc] rounded-xl overflow-hidden shadow flex flex-col">
                     <div className="relative w-full h-48 flex items-center justify-center bg-black">
                       <video
+                        key={`${selectedDay}-${w.title}`}
                         controls
                         width="100%"
                         height="100%"
-                        poster={w.img}
-                        className="object-cover w-full h-48 rounded-t-xl"
+                        className="w-full h-full rounded-t-xl"
+                        style={{ objectFit: 'contain' }}
                       >
                         <source src={w.video} type="video/mp4" />
                         Your browser does not support the video tag.
@@ -300,18 +249,7 @@ export default function ActiveLifestylePage() {
                   className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Number of Reps/Duration</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="1000"
-                  value={repsDuration}
-                  onChange={(e) => setRepsDuration(parseInt(e.target.value) || 0)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
-                  placeholder="Enter reps or duration"
-                />
-              </div>
+              
               <div>
                 <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Weight Used (kg)</label>
                 <input
@@ -350,35 +288,21 @@ export default function ActiveLifestylePage() {
           <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
             <h3 className="text-2xl font-bold mb-4 text-[#2e3d27]">Complete Session</h3>
             <p className="text-lg mb-6 text-[#2e3d27]">
-              You have completed <span className="font-bold">{completedExercises.length}</span> workouts.
+              You have completed {completedCount} out of {totalExercises} exercises.
             </p>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Current Weight (kg)</label>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                value={sessionWeight}
-                onChange={e => setSessionWeight(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
-                placeholder="Enter your current weight"
-                required
-              />
-            </div>
+            
             <div className="flex gap-3 mt-6">
               <button
                 onClick={() => setShowFinishSessionModal(false)}
                 className="flex-1 py-2 px-4 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition"
-                disabled={savingSession}
               >
                 Cancel
               </button>
               <button
                 onClick={confirmFinishSession}
                 className="flex-1 py-2 px-4 bg-[#60ab66] text-white rounded-lg font-semibold hover:bg-[#4c8a53] transition"
-                disabled={!sessionWeight || savingSession}
               >
-                {savingSession ? 'Saving...' : 'Complete'}
+                Complete
               </button>
             </div>
           </div>

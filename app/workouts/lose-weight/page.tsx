@@ -19,7 +19,7 @@ const weekDays = [
 type Workout = {
   title: string;
   subtitle: string;
-  img: string;
+  img?: string;
   video: string;
   weight: 'light' | 'moderate' | 'heavy';
 };
@@ -33,27 +33,31 @@ type CompletedExercise = {
 };
 
 const sampleVideos = [
-  "https://www.w3schools.com/html/mov_bbb.mp4",
-  "https://www.w3schools.com/html/movie.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x400_ocean_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1280x720_surfing_with_audio.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_1920x1080.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_960x540.mp4",
-  "https://filesamples.com/samples/video/mp4/sample_640x360.mp4"
+  "/images/Grow a Muscle/Weight Loss/jumprope.mp4", //0 Jump Rope
+  "/images/Grow a Muscle/Weight Loss/burpees.mp4", //1 Burpees
+  "/images/Grow a Muscle/Weight Loss/mountain.mp4", //2 Mountain Climbers
+  "/images/Grow a Muscle/Weight Loss/highknee.mp4", //3 High Knees
+  "/images/Grow a Muscle/Weight Loss/boxjump.mp4", //4 Box Jumps
+  "/images/Grow a Muscle/Weight Loss/jumplunge.mp4", //5 Jump Lunges
+  "/images/Grow a Muscle/Weight Loss/flutter.mp4", //6 Flutter Kicks
+  "/images/Grow a Muscle/Weight Loss/running.mp4", //7 Running
+  "/images/Grow a Muscle/Weight Loss/plankjacks.mp4", //8 Plank Jacks
+  "/images/Grow a Muscle/Weight Loss/tuckjumps.mp4", //9 Tuck Jumps
+
+
 ];
 
 const workoutPool: Workout[] = [
-  { title: "Jump Rope", subtitle: "Target: Cardio\n3 sets of 30 seconds", img: "/images/dashboard-bg.jpg", video: sampleVideos[0], weight: 'light' },
-  { title: "Burpees", subtitle: "Target: Full Body\n3 sets of 30 seconds", img: "/images/healthyliving.jpg", video: sampleVideos[1], weight: 'moderate' },
-  { title: "Mountain Climbers", subtitle: "Target: Cardio, Core\n3 sets of 30 seconds", img: "/images/trackprogress.jpg", video: sampleVideos[2], weight: 'light' },
-  { title: "High Knees", subtitle: "Target: Cardio\n3 sets of 30 seconds", img: "/images/visitcommunity.jpg", video: sampleVideos[3], weight: 'light' },
-  { title: "Box Jumps", subtitle: "Target: Legs, Cardio\n3 sets of 30 seconds", img: "/images/visitcommunity.jpg", video: sampleVideos[1], weight: 'moderate' },
-  { title: "Jumping Lunges", subtitle: "Target: Legs, Cardio\n3 sets of 30 seconds", img: "/images/dashboard-bg.jpg", video: sampleVideos[2], weight: 'light' },
-  { title: "Flutter Kicks", subtitle: "Target: Core\n3 sets of 30 seconds", img: "/images/healthyliving.jpg", video: sampleVideos[3], weight: 'light' },
-  { title: "Running", subtitle: "Target: Cardio\n3 sets of 60 seconds", img: "/images/trackprogress.jpg", video: sampleVideos[0], weight: 'light' },
-  { title: "Plank Jacks", subtitle: "Target: Core, Cardio\n3 sets of 30 seconds", img: "/images/healthyliving.jpg", video: sampleVideos[5], weight: 'light' },
-  { title: "Tuck Jumps", subtitle: "Target: Cardio\n3 sets of 30 seconds", img: "/images/visitcommunity.jpg", video: sampleVideos[7], weight: 'light' },
+  { title: "Jump Rope", subtitle: "Target: Cardio\n3 sets of 30 seconds", video: sampleVideos[0], weight: 'light' },
+  { title: "Burpees", subtitle: "Target: Full Body\n3 sets of 30 seconds", video: sampleVideos[1], weight: 'moderate' },
+  { title: "Mountain Climbers", subtitle: "Target: Cardio, Core\n3 sets of 30 seconds", video: sampleVideos[2], weight: 'light' },
+  { title: "High Knees", subtitle: "Target: Cardio\n3 sets of 30 seconds", video: sampleVideos[3], weight: 'light' },
+  { title: "Box Jumps", subtitle: "Target: Legs, Cardio\n3 sets of 30 seconds", video: sampleVideos[4], weight: 'moderate' },
+  { title: "Jumping Lunges", subtitle: "Target: Legs, Cardio\n3 sets of 30 seconds", video: sampleVideos[5], weight: 'light' },
+  { title: "Flutter Kicks", subtitle: "Target: Core\n3 sets of 30 seconds", video: sampleVideos[6], weight: 'light' },
+  { title: "Running", subtitle: "Target: Cardio\n3 sets of 60 seconds", video: sampleVideos[7], weight: 'light' },
+  { title: "Plank Jacks", subtitle: "Target: Core, Cardio\n3 sets of 30 seconds", video: sampleVideos[8], weight: 'light' },
+  { title: "Tuck Jumps", subtitle: "Target: Cardio\n3 sets of 30 seconds", video: sampleVideos[9], weight: 'light' },
 ];
 
 export default function LoseWeightPage() {
@@ -226,11 +230,12 @@ export default function LoseWeightPage() {
                   <div key={i} className="bg-[#e0e5dc] rounded-xl overflow-hidden shadow flex flex-col">
                     <div className="relative w-full h-48 flex items-center justify-center bg-black">
                       <video
+                        key={`${selectedDay}-${w.title}`}
                         controls
                         width="100%"
                         height="100%"
-                        poster={w.img}
-                        className="object-cover w-full h-48 rounded-t-xl"
+                        className="w-full h-full rounded-t-xl"
+                        style={{ objectFit: 'contain' }}
                       >
                         <source src={w.video} type="video/mp4" />
                         Your browser does not support the video tag.
