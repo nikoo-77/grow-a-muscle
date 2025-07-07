@@ -79,7 +79,7 @@ const hydrationTips = (
 const mentalWellness = [
   {
     title: "Motivational Quote",
-    content: <div className="italic text-[#2e3d27]">"The difference between a successful person and others is not a lack of strength, not a lack of knowledge, but rather a lack in will." – Vince Lombardi</div>
+    content: <div className="italic text-[#2e3d27]">&quot;The difference between a successful person and others is not a lack of strength, not a lack of knowledge, but rather a lack in will.&quot; – Vince Lombardi</div>
   },
   {
     title: "Journaling Prompt",

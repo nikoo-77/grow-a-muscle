@@ -1,30 +1,34 @@
 "use client";
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, User } from '../contexts/AuthContext';
 import ProfileDropdown from './ProfileDropdown';
 import { useState, useEffect } from 'react';
 import BMICalculatorModal from './BMICalculatorModal';
 import ProgramsModal from './ProgramsModal';
 import { supabase } from '../../lib/supabaseClient';
 import { BellIcon } from '@heroicons/react/24/outline';
+import Link from "next/link";
+import Image from "next/image";
+
+type Notification = { id: string; type: string; message: string; read: boolean; created_at?: string };
 
 export default function Navbar() {
   const { user, loading } = useAuth();
   const [bmiOpen, setBmiOpen] = useState(false);
   const [programsOpen, setProgramsOpen] = useState(false);
   const [progressOpen, setProgressOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [notifications, setNotifications] = useState<any[]>([]);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifLoading, setNotifLoading] = useState(false);
   const [invalidTime, setInvalidTime] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
-      if (user) {
+      if (user && typeof user === 'object' && 'id' in user) {
         const { data, error } = await supabase
           .from('users')
           .select('height, weight, fitness_goal, profile_picture, workout_time, workout_reminders')
-          .eq('id', user.id ?? user.uid)
+          .eq('id', (user as User).id)
           .single();
         if (!error) setUserProfile(data);
       } else {
@@ -35,12 +39,12 @@ export default function Navbar() {
   }, [user]);
 
   useEffect(() => {
-    if (user) {
+    if (user && typeof user === 'object' && 'id' in user) {
       setNotifLoading(true);
       supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', (user as User).id)
         .order('created_at', { ascending: false })
         .then(({ data, error }) => {
           if (!error && data) {
@@ -61,11 +65,11 @@ export default function Navbar() {
 
   // Listen for new notifications in real-time
   useEffect(() => {
-    if (!user) return;
+    if (!user || typeof user !== 'object' || !('id' in user)) return;
     const notifSub = supabase
       .channel('notifications')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` }, payload => {
-        const notif = payload.new;
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${(user as User).id}` }, payload => {
+        const notif = payload.new as Notification;
         setNotifications(prev => [notif, ...prev]);
         if (window.Notification && Notification.permission === 'granted') {
           new Notification('New Notification', { body: notif.message });
@@ -77,25 +81,25 @@ export default function Navbar() {
 
   // Determine the correct workouts link for the user
   let workoutsLink = "/workouts";
-  if (userProfile && userProfile.fitness_goal) {
+  if (userProfile && typeof userProfile === 'object' && 'fitness_goal' in userProfile && userProfile.fitness_goal) {
     workoutsLink = `/workouts/${userProfile.fitness_goal}`;
   }
 
   // Mark all as read when opening notifications
   const handleOpenNotif = async () => {
     setNotifOpen(true);
-    const unreadCount = notifications.filter((n: any) => !n.read).length;
-    if (user && unreadCount > 0) {
+    const unreadCount = notifications.filter((n) => !n.read).length;
+    if (user && typeof user === 'object' && 'id' in user && unreadCount > 0) {
       await supabase
         .from('notifications')
         .update({ read: true })
-        .eq('user_id', user.id)
+        .eq('user_id', (user as User).id)
         .eq('read', false);
       // Refetch notifications to update read status and unread count
       const { data, error } = await supabase
         .from('notifications')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', (user as User).id)
         .order('created_at', { ascending: false });
       if (!error && data) {
         setNotifications(data);
@@ -132,7 +136,7 @@ export default function Navbar() {
   }
 
   useEffect(() => {
-    if (!user || !userProfile?.workout_time || !userProfile?.workout_reminders) return;
+    if (!user || typeof user !== 'object' || !('id' in user) || !userProfile?.workout_time || !userProfile?.workout_reminders) return;
     setInvalidTime(false);
     // Parse workout_time (e.g., '6:00 PM' or '18:00')
     const parseTime = (timeStr: string) => {
@@ -163,7 +167,7 @@ export default function Navbar() {
     };
     const scheduleNextNotification = () => {
       const now = new Date();
-      let workoutDate = parseTime(userProfile.workout_time);
+      let workoutDate = parseTime(userProfile.workout_time!);
       if (!workoutDate || isNaN(workoutDate.getTime())) return;
       // If the time has already passed today, schedule for tomorrow
       if (now > workoutDate) {
@@ -174,7 +178,7 @@ export default function Navbar() {
         // Insert notification in DB
         await supabase.from('notifications').insert([
           {
-            user_id: user.id,
+            user_id: (user as User).id,
             type: 'reminder',
             message: `It's time for your workout! (${userProfile.workout_time})`,
           },
@@ -195,22 +199,22 @@ export default function Navbar() {
 
   // Delete a single notification
   const handleDeleteNotification = async (notifId: string) => {
-    if (!user) return;
+    if (!user || typeof user !== 'object' || !('id' in user)) return;
     await supabase
       .from('notifications')
       .delete()
       .eq('id', notifId)
-      .eq('user_id', user.id);
+      .eq('user_id', (user as User).id);
     setNotifications(prev => prev.filter(n => n.id !== notifId));
   };
 
   // Delete all notifications
   const handleClearAllNotifications = async () => {
-    if (!user) return;
+    if (!user || typeof user !== 'object' || !('id' in user)) return;
     await supabase
       .from('notifications')
       .delete()
-      .eq('user_id', user.id);
+      .eq('user_id', (user as User).id);
     setNotifications([]);
   };
 
@@ -220,8 +224,8 @@ export default function Navbar() {
     >
       {/* Left: Logo + Text */}
       <div className="flex items-center space-x-3 mb-2 md:mb-0">
-        <img src="/logo1.png" alt="Logo" className="h-20 w-20" />
-        <a href="/" className="text-3xl font-bold" style={{ color: '#fdfcf7' }}>Grow A Muscle</a>
+        <Image src="/logo1.png" alt="Logo" width={80} height={80} className="h-20 w-20" />
+        <Link href="/" className="text-3xl font-bold" style={{ color: '#fdfcf7' }}>Grow A Muscle</Link>
       </div>
 
       {/* Right: Nav Links + Login */}
@@ -233,8 +237,8 @@ export default function Navbar() {
         >
           Programs
         </button>
-        <a href={workoutsLink} className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}>Workouts</a>
-        <a href="/progress" className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}>Progress</a>
+        <Link href={workoutsLink} className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}>Workouts</Link>
+        <Link href="/progress" className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}>Progress</Link>
         <button
           className="text-2xl hover:text-blue-400" style={{ color: '#fdfcf7' }}
           onClick={() => setBmiOpen(true)}
@@ -270,9 +274,9 @@ export default function Navbar() {
               aria-label="Notifications"
             >
               <BellIcon className="h-8 w-8 text-white" />
-              {notifications.filter((n: any) => !n.read).length > 0 && (
+              {notifications.filter((n) => !n.read).length > 0 && (
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white rounded-full text-xs px-1.5 py-0.5">
-                  {notifications.filter((n: any) => !n.read).length}
+                  {notifications.filter((n) => !n.read).length}
                 </span>
               )}
             </button>
@@ -320,7 +324,7 @@ export default function Navbar() {
         {loading ? (
           <div className="w-12 h-12 bg-gray-600 rounded-full animate-pulse"></div>
         ) : user ? (
-          <ProfileDropdown profilePicture={userProfile?.profile_picture} user={user} />
+          <ProfileDropdown profilePicture={userProfile && typeof userProfile === 'object' && 'profile_picture' in userProfile ? userProfile.profile_picture : undefined} user={user} />
         ) : (
           <a
             href="/login"
@@ -330,8 +334,8 @@ export default function Navbar() {
           </a>
         )}
       </div>
-      <BMICalculatorModal open={bmiOpen} onClose={() => setBmiOpen(false)} userProfile={userProfile} />
-      <ProgramsModal open={programsOpen} onClose={() => setProgramsOpen(false)} user={user} userProfile={userProfile} />
+      <BMICalculatorModal open={bmiOpen} onClose={() => setBmiOpen(false)} userProfile={userProfile ? { height: (userProfile as any).height ?? undefined, weight: (userProfile as any).weight ?? undefined } : undefined} />
+      <ProgramsModal open={programsOpen} onClose={() => setProgramsOpen(false)} user={user} userProfile={userProfile as UserProfile} />
     </nav>
   );
 }
