@@ -5,13 +5,15 @@ import { useRouter } from 'next/navigation';
 import { useAuth, User } from '../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
 import Image from "next/image";
+import { UserProfile } from '../types/UserProfile';
 
 interface ProfileDropdownProps {
   profilePicture?: string | null;
   user?: User;
+  userProfile?: UserProfile | null;
 }
 
-export default function ProfileDropdown({ profilePicture, user }: ProfileDropdownProps) {
+export default function ProfileDropdown({ profilePicture, user, userProfile }: ProfileDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -80,7 +82,9 @@ export default function ProfileDropdown({ profilePicture, user }: ProfileDropdow
               </div>
               <div>
                 <p className="text-lg font-semibold text-gray-900">
-                  {user?.displayName || user?.email?.split('@')[0] || 'User'}
+                  {userProfile?.first_name || userProfile?.last_name
+                    ? `${userProfile?.first_name || ''} ${userProfile?.last_name || ''}`.trim()
+                    : user?.displayName || user?.email?.split('@')[0] || 'User'}
                 </p>
                 <p className="text-sm text-gray-500">{user?.email}</p>
               </div>

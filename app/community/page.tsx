@@ -60,6 +60,7 @@ function PostImageCarousel({ images, onImageClick }: { images: string[]; onImage
 
   const goLeft = (e: React.MouseEvent) => {
     if (animating) return;
+    e.preventDefault();
     e.stopPropagation();
     setPrev(current);
     setDirection('left');
@@ -68,6 +69,7 @@ function PostImageCarousel({ images, onImageClick }: { images: string[]; onImage
   };
   const goRight = (e: React.MouseEvent) => {
     if (animating) return;
+    e.preventDefault();
     e.stopPropagation();
     setPrev(current);
     setDirection('right');
@@ -140,7 +142,12 @@ function PostImageCarousel({ images, onImageClick }: { images: string[]; onImage
               : ' translate-x-0 opacity-100 ' + transition)
           }
           style={{ zIndex: 20 }}
-          onClick={() => onImageClick && onImageClick(images[current])}
+          onClick={e => {
+            // Only open modal if the click is directly on the image, not on a child (like the button)
+            if (e.target === e.currentTarget && onImageClick) {
+              onImageClick(images[current]);
+            }
+          }}
         />
         {/* Left arrow */}
         {images.length > 1 && (
@@ -152,7 +159,7 @@ function PostImageCarousel({ images, onImageClick }: { images: string[]; onImage
               type="button"
               disabled={animating}
             >
-              <svg className="w-6 h-6 text-[#60ab66]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              <svg className="w-6 h-6 text-[#60ab66] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
             {/* Right arrow */}
             <button
@@ -162,7 +169,7 @@ function PostImageCarousel({ images, onImageClick }: { images: string[]; onImage
               type="button"
               disabled={animating}
             >
-              <svg className="w-6 h-6 text-[#60ab66]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              <svg className="w-6 h-6 text-[#60ab66] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
           </>
         )}

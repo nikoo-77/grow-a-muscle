@@ -7,7 +7,7 @@ import Link from "next/link";
 const teamMembers = [
   {
     name: 'Andre Emmanuel Delica',
-    role: 'Founder & Full Stack Developer',
+    role: 'Database Architect & Full Stack Developer',
     image: '/images/andre.jpg',
     quote: 'Will debug for protein shakes.',
     socials: {
@@ -22,19 +22,19 @@ const teamMembers = [
     image: '/images/janssen.jpg',
     quote: 'Squats by day, semicolons by night.',
     socials: {
-      facebook: 'https://www.pornhub.com/',
-      instagram: 'https://jav.guru/',
-      github: 'https://beeg.com/',
+      facebook: 'https://www.instagram.com/p/DI6TYXITyOQ/?img_index=1',
+      instagram: 'https://www.instagram.com/lararajj/',
+      github: 'https://www.instagram.com/p/DLu5qBmup_M/?img_index=1',
     },
   },
   {
     name: 'Gelo Nikolai Lajera',
-    role: 'Backend Developer & Database Architect',
+    role: 'Founder & Backend Developer',
     image: '/images/gelo.jpg',
     quote: 'Push code, pull weights.',
     socials: {
       facebook: 'https://www.facebook.com/andrea.fin.2024',
-      instagram: 'https://www.instagram.com/dreandreandrea/',
+      instagram: 'https://www.instagram.com/reel/DE9iJaLP0AV/',
       github: 'https://github.com/jdesolate',
     },
   },
