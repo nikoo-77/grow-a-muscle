@@ -2,12 +2,13 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth, User } from '../contexts/AuthContext';
 import { supabase } from '../../lib/supabaseClient';
+import Image from "next/image";
 
 interface ProfileDropdownProps {
   profilePicture?: string | null;
-  user?: any;
+  user?: User;
 }
 
 export default function ProfileDropdown({ profilePicture, user }: ProfileDropdownProps) {
@@ -50,11 +51,11 @@ export default function ProfileDropdown({ profilePicture, user }: ProfileDropdow
         className="flex items-center justify-center w-12 h-12 bg-white text-[#27233A] rounded-full hover:bg-gray-200 transition-colors text-2xl font-bold"
       >
         {profilePicture ? (
-          <img 
-            src={profilePicture} 
-            alt="Profile" 
-            className="w-full h-full rounded-full object-cover"
-          />
+          profilePicture.startsWith("/") ? (
+            <Image src={profilePicture} alt="Profile" width={48} height={48} className="w-full h-full rounded-full object-cover" />
+          ) : (
+            <img src={profilePicture} alt="Profile" className="w-full h-full rounded-full object-cover" />
+          )
         ) : (
           getInitials(user?.email || 'U')
         )}
@@ -68,11 +69,11 @@ export default function ProfileDropdown({ profilePicture, user }: ProfileDropdow
             <div className="flex items-center">
               <div className="flex items-center justify-center w-10 h-10 bg-[#505168] text-white rounded-full text-xl font-bold mr-3">
                 {profilePicture ? (
-                  <img 
-                    src={profilePicture} 
-                    alt="Profile" 
-                    className="w-full h-full rounded-full object-cover"
-                  />
+                  profilePicture.startsWith("/") ? (
+                    <Image src={profilePicture} alt="Profile" width={40} height={40} className="w-full h-full rounded-full object-cover" />
+                  ) : (
+                    <img src={profilePicture} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                  )
                 ) : (
                   getInitials(user?.email || 'U')
                 )}

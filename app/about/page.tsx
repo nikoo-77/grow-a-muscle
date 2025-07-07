@@ -2,6 +2,7 @@
 import React from 'react';
 import Navbar from '../components/Navbar';
 import { motion } from 'framer-motion';
+import Link from "next/link";
 
 const teamMembers = [
   {
@@ -148,7 +149,7 @@ const AboutPage: React.FC = () => {
                     <h3 className="text-2xl font-bold text-[#2e3d27] mb-1 mt-2 group-hover:text-[#60ab66] transition-colors duration-200">{member.name}</h3>
                     <p className="text-[#60ab66] text-base font-semibold mb-2">{member.role}</p>
                     <div className="bg-[#f6f9f6] border border-[#e0e5dc] rounded-xl px-4 py-2 mb-3 mt-1 shadow-sm max-w-xs">
-                      <span className="italic text-[#2e3d27] text-sm">"{member.quote}"</span>
+                      <span className="italic text-[#2e3d27] text-sm">&quot;{member.quote}&quot;</span>
                     </div>
                     <div className="flex justify-center gap-5 mt-2">
                       <a href={member.socials.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
@@ -232,7 +233,7 @@ const AboutPage: React.FC = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <a href="/" className="bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl">Start Your Journey</a>
+            <Link href="/" className="bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl">Start Your Journey</Link>
           </motion.div>
         </motion.div>
       </section>

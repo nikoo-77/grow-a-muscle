@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import ProgramsModal from './ProgramsModal';
 import { motion } from 'framer-motion';
+import Link from "next/link";
+import Image from "next/image";
 
 interface User {
   id: string;
@@ -202,7 +204,7 @@ const DashboardSection: React.FC = () => {
               initial={{ opacity: 0, y: 40 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.8, duration: 0.7 }}
-            >Start your journey with personalized plans, expert tips, and a community that lifts you higher. Whether you're a beginner or a pro, we're here to help you build strength, confidence, and lasting results.</motion.p>
+            >Start your journey with personalized plans, expert tips, and a community that lifts you higher. Whether you&apos;re a beginner or a pro, we&apos;re here to help you build strength, confidence, and lasting results.</motion.p>
             <motion.div
               className="flex flex-col sm:flex-row gap-4 mt-4"
               initial={{ opacity: 0, y: 20 }}
@@ -261,7 +263,7 @@ const DashboardSection: React.FC = () => {
                 </span>
                 <span className="text-[#2e3d27] text-base">workouts completed</span>
               </div>
-              <a href="/about" className="ml-8 bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl">Learn More About Us</a>
+              <Link href="/about" className="ml-8 bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl">Learn More About Us</Link>
             </div>
           </motion.div>
           {/* Right: Image with accent */}
@@ -273,7 +275,7 @@ const DashboardSection: React.FC = () => {
             transition={{ duration: 0.7, delay: 0.2 }}
           >
             <div className="absolute -left-8 top-8 w-40 h-40 bg-[#60ab66]/30 rounded-2xl z-0 hidden md:block" />
-            <img src="/images/healthyliving.jpg" alt="Why Grow A Muscle" className="relative z-10 rounded-2xl shadow-2xl w-full max-w-md object-cover" />
+            <Image src="/images/healthyliving.jpg" alt="Why Grow A Muscle" width={400} height={400} className="relative z-10 rounded-2xl shadow-2xl w-full max-w-md object-cover" />
           </motion.div>
         </div>
       </div>

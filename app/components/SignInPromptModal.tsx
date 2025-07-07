@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from "next/link";
 
 interface SignInPromptModalProps {
   open: boolean;
@@ -63,9 +64,7 @@ export default function SignInPromptModal({ open, onClose, action }: SignInPromp
           
           <p className="text-sm text-gray-500 mt-4">
             Already have an account?{' '}
-            <a href="/login" className="text-[#60ab66] hover:underline font-medium">
-              Sign In
-            </a>
+            <Link href="/login" className="text-[#60ab66] hover:underline font-medium">Sign in</Link>
           </p>
         </div>
       </div>
