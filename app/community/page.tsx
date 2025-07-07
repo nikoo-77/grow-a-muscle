@@ -60,6 +60,7 @@ function PostImageCarousel({ images, onImageClick }: { images: string[]; onImage
 
   const goLeft = (e: React.MouseEvent) => {
     if (animating) return;
+    e.preventDefault();
     e.stopPropagation();
     setPrev(current);
     setDirection('left');
@@ -68,6 +69,7 @@ function PostImageCarousel({ images, onImageClick }: { images: string[]; onImage
   };
   const goRight = (e: React.MouseEvent) => {
     if (animating) return;
+    e.preventDefault();
     e.stopPropagation();
     setPrev(current);
     setDirection('right');
@@ -140,29 +142,34 @@ function PostImageCarousel({ images, onImageClick }: { images: string[]; onImage
               : ' translate-x-0 opacity-100 ' + transition)
           }
           style={{ zIndex: 20 }}
-          onClick={() => onImageClick && onImageClick(images[current])}
+          onClick={e => {
+            // Only open modal if the click is directly on the image, not on a child (like the button)
+            if (e.target === e.currentTarget && onImageClick) {
+              onImageClick(images[current]);
+            }
+          }}
         />
         {/* Left arrow */}
         {images.length > 1 && (
           <>
             <button
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-10 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 pointer-events-auto"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-30 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 pointer-events-auto"
               onClick={goLeft}
               aria-label="Previous image"
               type="button"
               disabled={animating}
             >
-              <svg className="w-6 h-6 text-[#60ab66]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+              <svg className="w-6 h-6 text-[#60ab66] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
             </button>
             {/* Right arrow */}
             <button
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-10 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 pointer-events-auto"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-30 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 pointer-events-auto"
               onClick={goRight}
               aria-label="Next image"
               type="button"
               disabled={animating}
             >
-              <svg className="w-6 h-6 text-[#60ab66]" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+              <svg className="w-6 h-6 text-[#60ab66] pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
             </button>
           </>
         )}

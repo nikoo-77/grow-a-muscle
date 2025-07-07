@@ -171,23 +171,6 @@ export default function ProgressPage() {
                   </ResponsiveContainer>
                 )}
               </div>
-              {/* Total Volume Lifted Over Time */}
-              <div className="mb-10">
-                <h3 className="text-lg font-semibold text-[#2e3d27] mb-2">Total Volume Lifted Over Time</h3>
-                {volumeData.length === 0 ? (
-                  <div className="text-center text-gray-500">No data available.</div>
-                ) : (
-                  <ResponsiveContainer width="100%" height={250}>
-                    <LineChart data={volumeData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" />
-                      <XAxis dataKey="date" />
-                      <YAxis />
-                      <Tooltip />
-                      <Line type="monotone" dataKey="volume" stroke="#4c8a53" strokeWidth={3} dot={{ r: 4 }} />
-                    </LineChart>
-                  </ResponsiveContainer>
-                )}
-              </div>
             </>
           )}
         </div>
