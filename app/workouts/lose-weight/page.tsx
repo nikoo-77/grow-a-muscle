@@ -183,7 +183,7 @@ export default function LoseWeightPage() {
         return;
       }
       const status = await getWeeklyWorkoutStatus(user.id, 'lose-weight');
-      setWeeklyStatus(status || {});
+      setWeeklyStatus((status || {}) as WeeklyStatus);
     }
     fetchWeeklyStatus();
   }, [user]);
