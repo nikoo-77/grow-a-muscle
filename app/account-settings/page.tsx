@@ -38,6 +38,7 @@ export default function AccountSettingsPage() {
   const [prefsError, setPrefsError] = useState('');
   const [workoutsDone, setWorkoutsDone] = useState<number | null>(null);
   const [workoutsDoneLoading, setWorkoutsDoneLoading] = useState(true);
+  const [memberSince, setMemberSince] = useState<string | null>(null);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -91,6 +92,17 @@ export default function AccountSettingsPage() {
         .then(count => setWorkoutsDone(count))
         .catch(() => setWorkoutsDone(0))
         .finally(() => setWorkoutsDoneLoading(false));
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (user) {
+      // Fetch the full auth user to get created_at
+      supabase.auth.getUser().then(({ data, error }) => {
+        if (!error && data?.user?.created_at) {
+          setMemberSince(data.user.created_at);
+        }
+      });
     }
   }, [user]);
 
@@ -294,7 +306,7 @@ export default function AccountSettingsPage() {
               <div className="p-4 border border-[#e6f4ea] bg-[#f8fdf8] rounded-lg">
                 <p className="text-sm text-[#60ab66]">Member Since</p>
                 <p className="text-lg font-semibold">
-                  {'N/A'}
+                  {memberSince ? new Date(memberSince).toLocaleDateString() : 'N/A'}
                 </p>
               </div>
               <div className="p-4 border border-[#e6f4ea] bg-[#f8fdf8] rounded-lg">

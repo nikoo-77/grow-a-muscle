@@ -325,7 +325,7 @@ export default function Navbar() {
         {loading ? (
           <div className="w-12 h-12 bg-gray-600 rounded-full animate-pulse"></div>
         ) : user ? (
-          <ProfileDropdown profilePicture={userProfile && typeof userProfile === 'object' && 'profile_picture' in userProfile ? userProfile.profile_picture : undefined} user={user} />
+          <ProfileDropdown profilePicture={userProfile && typeof userProfile === 'object' && 'profile_picture' in userProfile ? userProfile.profile_picture : undefined} user={user} userProfile={userProfile} />
         ) : (
           <a
             href="/login"

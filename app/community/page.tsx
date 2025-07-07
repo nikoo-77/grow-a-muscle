@@ -146,7 +146,7 @@ function PostImageCarousel({ images, onImageClick }: { images: string[]; onImage
         {images.length > 1 && (
           <>
             <button
-              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-30 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 pointer-events-auto"
+              className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-10 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 pointer-events-auto"
               onClick={goLeft}
               aria-label="Previous image"
               type="button"
@@ -156,7 +156,7 @@ function PostImageCarousel({ images, onImageClick }: { images: string[]; onImage
             </button>
             {/* Right arrow */}
             <button
-              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-30 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 pointer-events-auto"
+              className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 rounded-full p-1 shadow hover:bg-white z-10 transition-all duration-200 hover:scale-110 hover:shadow-lg active:scale-95 pointer-events-auto"
               onClick={goRight}
               aria-label="Next image"
               type="button"
