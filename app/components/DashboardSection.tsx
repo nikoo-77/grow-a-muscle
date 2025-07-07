@@ -253,7 +253,7 @@ const DashboardSection: React.FC = () => {
           >
             <span className="uppercase tracking-widest text-[#60ab66] font-bold text-base mb-2 block">WHY CHOOSE US</span>
             <h2 className="text-4xl md:text-5xl font-extrabold text-[#2e3d27] mb-6 leading-tight">Why Grow A Muscle?</h2>
-            <p className="italic text-lg text-[#60ab66] mb-6">“Empowering you to build strength, confidence, and a healthier lifestyle—one workout at a time.”</p>
+            <p className="italic text-lg text-[#60ab66] mb-6">"Empowering you to build strength, confidence, and a healthier lifestyle—one workout at a time."</p>
             <p className="text-[#2e3d27] text-lg mb-4">Grow A Muscle is your all-in-one fitness companion, designed to help you achieve your goals with personalized workout plans, expert guidance, and a supportive community. Whether you're just starting out or looking to break through plateaus, our platform adapts to your needs and keeps you motivated.</p>
             <p className="text-[#2e3d27] text-lg mb-4">Our certified trainers and nutritionists provide science-backed advice, while our progress tracking tools ensure you see real results. Join thousands of users who have transformed their lives and discovered the power of consistency.</p>
             <div className="flex items-center gap-4 mt-8">
@@ -326,7 +326,7 @@ const DashboardSection: React.FC = () => {
               whileHover={{ scale: 1.04, boxShadow: '0 20px 40px -8px rgba(96,171,102,0.15)' }}
             >
               <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="User 1" className="w-20 h-20 rounded-full mb-4 border-4 border-[#60ab66] object-cover" />
-              <p className="text-lg text-[#2e3d27] mb-4">“Grow A Muscle helped me stay consistent and motivated. The community and plans are amazing!”</p>
+              <p className="text-lg text-[#2e3d27] mb-4">"Grow A Muscle helped me stay consistent and motivated. The community and plans are amazing!"</p>
               <span className="font-bold text-[#60ab66]">James P.</span>
             </motion.div>
             {/* Testimonial 2 */}
@@ -339,7 +339,7 @@ const DashboardSection: React.FC = () => {
               whileHover={{ scale: 1.04, boxShadow: '0 20px 40px -8px rgba(96,171,102,0.15)' }}
             >
               <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="User 2" className="w-20 h-20 rounded-full mb-4 border-4 border-[#60ab66] object-cover" />
-              <p className="text-lg text-[#2e3d27] mb-4">“I love the personalized workouts and the easy progress tracking. I feel stronger every week!”</p>
+              <p className="text-lg text-[#2e3d27] mb-4">"I love the personalized workouts and the easy progress tracking. I feel stronger every week!"</p>
               <span className="font-bold text-[#60ab66]">Maria S.</span>
             </motion.div>
             {/* Testimonial 3 */}
@@ -352,7 +352,7 @@ const DashboardSection: React.FC = () => {
               whileHover={{ scale: 1.04, boxShadow: '0 20px 40px -8px rgba(96,171,102,0.15)' }}
             >
               <img src="https://randomuser.me/api/portraits/men/85.jpg" alt="User 3" className="w-20 h-20 rounded-full mb-4 border-4 border-[#60ab66] object-cover" />
-              <p className="text-lg text-[#2e3d27] mb-4">“The expert tips and support from the community keep me going. Best fitness app I've tried!”</p>
+              <p className="text-lg text-[#2e3d27] mb-4">"The expert tips and support from the community keep me going. Best fitness app I&apos;ve tried!"</p>
               <span className="font-bold text-[#60ab66]">Alex R.</span>
             </motion.div>
           </div>

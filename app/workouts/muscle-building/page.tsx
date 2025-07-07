@@ -111,6 +111,21 @@ const workoutsByDay: { [key: string]: Workout[] } = {
   Sunday: [],
 };
 
+// Define interfaces for user profile and weekly status
+interface UserProfile {
+  first_name: string;
+  last_name: string;
+  fitness_goal: string;
+}
+
+interface WeeklyStatusDay {
+  exercises: CompletedExercise[];
+}
+
+interface WeeklyStatus {
+  [day: string]: WeeklyStatusDay;
+}
+
 export default function MuscleBuildingPage() {
   // Get current day of the week
   const getCurrentDay = () => {
@@ -128,12 +143,12 @@ export default function MuscleBuildingPage() {
   const [repsDuration, setRepsDuration] = useState(0);
   const [sessionWeight, setSessionWeight] = useState('');
   const [savingSession, setSavingSession] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { user } = useAuth();
   const [sessionLocked, setSessionLocked] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
-  const [weeklyStatus, setWeeklyStatus] = useState<any>({});
+  const [weeklyStatus, setWeeklyStatus] = useState<WeeklyStatus>({});
   
   const workouts = workoutsByDay[selectedDay];
   const isRestDay = workouts.length === 0;
@@ -147,9 +162,9 @@ export default function MuscleBuildingPage() {
         const { data, error } = await supabase
           .from('users')
           .select('first_name, last_name, fitness_goal')
-          .eq('id', user.id ?? user.uid)
+          .eq('id', user.id)
           .single();
-        if (!error) setUserProfile(data);
+        if (!error) setUserProfile(data as UserProfile);
       } else {
         setUserProfile(null);
       }
@@ -160,7 +175,7 @@ export default function MuscleBuildingPage() {
   useEffect(() => {
     const checkSessionLock = async () => {
       if (user) {
-        const completed = await checkWeeklyWorkoutCompletion(user.id || user.uid, 'muscle-building', selectedDay);
+        const completed = await checkWeeklyWorkoutCompletion(user.id, 'muscle-building', selectedDay);
         setSessionLocked(!!completed);
       } else {
         setSessionLocked(false);
@@ -184,7 +199,7 @@ export default function MuscleBuildingPage() {
         .eq('day_of_week', selectedDay)
         .single();
       if (!error && data && data.exercises) {
-        setCompletedExercises(data.exercises);
+        setCompletedExercises(data.exercises as CompletedExercise[]);
       } else {
         setCompletedExercises([]);
       }
@@ -196,11 +211,11 @@ export default function MuscleBuildingPage() {
   useEffect(() => {
     async function fetchWeeklyStatus() {
       if (!user) {
-        setWeeklyStatus({});
+        setWeeklyStatus(() => ({} as WeeklyStatus));
         return;
       }
       const status = await getWeeklyWorkoutStatus(user.id, 'muscle-building');
-      setWeeklyStatus(status || {});
+      setWeeklyStatus((status || {}) as WeeklyStatus);
     }
     fetchWeeklyStatus();
   }, [user]);
@@ -218,7 +233,7 @@ export default function MuscleBuildingPage() {
 
   const confirmFinishExercise = async () => {
     if (currentExercise) {
-      const completedExercise = {
+      const completedExercise: CompletedExercise = {
         exerciseTitle: currentExercise.title,
         sets: sets,
         weight: weight,
@@ -227,7 +242,7 @@ export default function MuscleBuildingPage() {
       if (user) {
         const { error } = await supabase.from('exercise_log').insert([
           {
-            user_id: user.id || user.uid,
+            user_id: user.id,
             first_name: userProfile?.first_name || null,
             last_name: userProfile?.last_name || null,
             fitness_goal: userProfile?.fitness_goal || null,
@@ -265,7 +280,7 @@ export default function MuscleBuildingPage() {
     if (!sessionWeight || !user) return;
     setSavingSession(true);
     try {
-      await markWeeklyWorkoutCompleted(user.id || user.uid, 'muscle-building', selectedDay, completedExercises);
+      await markWeeklyWorkoutCompleted(user.id, 'muscle-building', selectedDay, completedExercises);
       const { data: userPrefs } = await supabase
         .from('users')
         .select('progress_updates')
@@ -285,7 +300,7 @@ export default function MuscleBuildingPage() {
           });
         }
       }
-      const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'muscle-building');
+      const newStatus = await getWeeklyWorkoutStatus(user.id, 'muscle-building');
       setShowFinishSessionModal(false);
       setSessionWeight('');
       setSessionCompleted(true);

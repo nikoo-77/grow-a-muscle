@@ -55,6 +55,14 @@ const workoutPool: Workout[] = [
   { title: "Side Bend", subtitle: "Target: Obliques\n3 sets of 30 sec hold", video: sampleVideos[7], weight: 'light' },
 ];
 
+// Define interfaces for weekly status
+interface WeeklyStatusDay {
+  exercises?: CompletedExercise[];
+}
+interface WeeklyStatus {
+  [day: string]: WeeklyStatusDay;
+}
+
 export default function ImproveFlexibilityPage() {
   const { user } = useAuth();
 
@@ -83,7 +91,7 @@ export default function ImproveFlexibilityPage() {
   const [sessionLocked, setSessionLocked] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [savingSession, setSavingSession] = useState(false);
-  const [weeklyStatus, setWeeklyStatus] = useState<any>({});
+  const [weeklyStatus, setWeeklyStatus] = useState<WeeklyStatus>({});
 
   useEffect(() => {
     function getRandomWorkouts(): Workout[] {
@@ -105,7 +113,7 @@ export default function ImproveFlexibilityPage() {
   useEffect(() => {
     const checkSessionLock = async () => {
       if (user) {
-        const completed = await checkWeeklyWorkoutCompletion(user.id || user.uid, 'improve-flexibility', selectedDay);
+        const completed = await checkWeeklyWorkoutCompletion(user.id, 'improve-flexibility', selectedDay);
         setSessionLocked(!!completed);
       } else {
         setSessionLocked(false);
@@ -129,7 +137,7 @@ export default function ImproveFlexibilityPage() {
         .eq('day_of_week', selectedDay)
         .single();
       if (!error && data && data.exercises) {
-        setCompletedExercises(data.exercises);
+        setCompletedExercises(data.exercises as CompletedExercise[]);
       } else {
         setCompletedExercises([]);
       }
@@ -141,11 +149,11 @@ export default function ImproveFlexibilityPage() {
   useEffect(() => {
     async function fetchWeeklyStatus() {
       if (!user) {
-        setWeeklyStatus({});
+        setWeeklyStatus(() => ({} as WeeklyStatus));
         return;
       }
       const status = await getWeeklyWorkoutStatus(user.id, 'improve-flexibility');
-      setWeeklyStatus(status || {});
+      setWeeklyStatus((status || {}) as WeeklyStatus);
     }
     fetchWeeklyStatus();
   }, [user]);
@@ -190,7 +198,7 @@ export default function ImproveFlexibilityPage() {
     if (!user) return;
     setSavingSession(true);
     try {
-      await markWeeklyWorkoutCompleted(user.id || user.uid, 'improve-flexibility', selectedDay, completedExercises);
+      await markWeeklyWorkoutCompleted(user.id, 'improve-flexibility', selectedDay, completedExercises);
       const { data: userPrefs } = await supabase
         .from('users')
         .select('progress_updates')
@@ -210,7 +218,7 @@ export default function ImproveFlexibilityPage() {
           });
         }
       }
-      const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'improve-flexibility');
+      const newStatus = await getWeeklyWorkoutStatus(user.id, 'improve-flexibility');
       setShowFinishSessionModal(false);
       setSessionCompleted(true);
       setSessionLocked(true);

@@ -71,7 +71,7 @@ const AboutPage: React.FC = () => {
         >
           <span className="uppercase tracking-widest text-[#60ab66] font-bold text-base md:text-lg mb-2">About Us</span>
           <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-tight mb-4 drop-shadow-xl">Grow A Muscle</h1>
-          <p className="text-xl md:text-2xl text-[#e0e5dc] font-medium max-w-2xl mx-auto drop-shadow-lg">Empowering you to build strength, confidence, and a healthier lifestyle—one workout at a time.</p>
+          <p className="text-xl md:text-2xl text-[#e0e5dc] font-medium max-w-2xl mx-auto drop-shadow-lg">We&apos;re passionate about helping you reach your goals. It&apos;s never too late to start, and you&apos;re never alone on this journey.</p>
         </motion.div>
       </motion.div>
       {/* Main Content Section */}

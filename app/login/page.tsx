@@ -40,12 +40,16 @@ export default function LoginPage() {
           .insert({ user_id: userId, login_at: new Date().toISOString() });
       }
       router.push("/");
-    } catch (error: any) {
-      if (error?.message?.includes("Invalid login credentials")) {
-        setError("Incorrect email or password.");
-      } else {
-        setError(error.message || "Failed to sign in. Please check your credentials");
+    } catch (error: unknown) {
+      let msg = "Failed to sign in. Please check your credentials";
+      if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
+        if ((error as any).message.includes("Invalid login credentials")) {
+          msg = "Incorrect email or password.";
+        } else {
+          msg = (error as any).message;
+        }
       }
+      setError(msg);
     } finally {
       setLoading(false);
     }

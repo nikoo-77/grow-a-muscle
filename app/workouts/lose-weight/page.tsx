@@ -62,6 +62,19 @@ const workoutPool: Workout[] = [
   { title: "Tuck Jumps", subtitle: "Target: Cardio\n3 sets of 30 seconds", video: sampleVideos[9], weight: 'light' },
 ];
 
+interface UserProfile {
+  first_name?: string;
+  last_name?: string;
+  fitness_goal?: string;
+}
+interface WeeklyStatusDay {
+  completed?: boolean;
+  exercises?: CompletedExercise[];
+}
+interface WeeklyStatus {
+  [day: string]: WeeklyStatusDay;
+}
+
 export default function LoseWeightPage() {
   // Get current day of the week
   const getCurrentDay = () => {
@@ -88,11 +101,11 @@ export default function LoseWeightPage() {
   const [repsDuration, setRepsDuration] = useState(0);
   const [sessionWeight, setSessionWeight] = useState('');
   const [savingSession, setSavingSession] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const { user } = useAuth();
   const [sessionLocked, setSessionLocked] = useState(false);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
-  const [weeklyStatus, setWeeklyStatus] = useState<any>({});
+  const [weeklyStatus, setWeeklyStatus] = useState<WeeklyStatus>({});
 
   useEffect(() => {
     function getRandomWorkouts(): Workout[] {
@@ -117,7 +130,7 @@ export default function LoseWeightPage() {
         const { data, error } = await supabase
           .from('users')
           .select('first_name, last_name, fitness_goal')
-          .eq('id', user.id ?? user.uid)
+          .eq('id', user.id)
           .single();
         if (!error) setUserProfile(data);
       } else {
@@ -130,7 +143,7 @@ export default function LoseWeightPage() {
   useEffect(() => {
     const checkSessionLock = async () => {
       if (user) {
-        const completed = await checkWeeklyWorkoutCompletion(user.id || user.uid, 'lose-weight', selectedDay);
+        const completed = await checkWeeklyWorkoutCompletion(user.id, 'lose-weight', selectedDay);
         setSessionLocked(!!completed);
       } else {
         setSessionLocked(false);
@@ -166,7 +179,7 @@ export default function LoseWeightPage() {
   useEffect(() => {
     async function fetchWeeklyStatus() {
       if (!user) {
-        setWeeklyStatus({});
+        setWeeklyStatus(() => ({} as WeeklyStatus));
         return;
       }
       const status = await getWeeklyWorkoutStatus(user.id, 'lose-weight');
@@ -203,7 +216,7 @@ export default function LoseWeightPage() {
       if (user) {
         const { error } = await supabase.from('exercise_log').insert([
           {
-            user_id: user.id || user.uid,
+            user_id: user.id,
             first_name: userProfile?.first_name || null,
             last_name: userProfile?.last_name || null,
             fitness_goal: userProfile?.fitness_goal || null,
@@ -241,7 +254,7 @@ export default function LoseWeightPage() {
     if (!sessionWeight || !user) return;
     setSavingSession(true);
     try {
-      await markWeeklyWorkoutCompleted(user.id || user.uid, 'lose-weight', selectedDay, completedExercises);
+      await markWeeklyWorkoutCompleted(user.id, 'lose-weight', selectedDay, completedExercises);
       const { data: userPrefs } = await supabase
         .from('users')
         .select('progress_updates')
@@ -261,7 +274,7 @@ export default function LoseWeightPage() {
           });
         }
       }
-      const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'lose-weight');
+      const newStatus = await getWeeklyWorkoutStatus(user.id, 'lose-weight');
       setShowFinishSessionModal(false);
       setSessionWeight('');
       setSessionLocked(true);

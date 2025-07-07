@@ -105,6 +105,20 @@ const workoutsByDay: { [key: string]: Workout[] } = {
   Sunday: [],
 };
 
+// Define interfaces for user profile and weekly status
+interface UserProfile {
+  first_name?: string;
+  last_name?: string;
+  fitness_goal?: string;
+}
+interface WeeklyStatusDay {
+  completed?: boolean;
+  exercises?: CompletedExercise[];
+}
+interface WeeklyStatus {
+  [day: string]: WeeklyStatusDay;
+}
+
 export default function StrengthTrainingPage() {
   // Get current day of the week
   const getCurrentDay = () => {
@@ -122,8 +136,8 @@ export default function StrengthTrainingPage() {
   const [repsDuration, setRepsDuration] = useState(0);
   const [sessionWeight, setSessionWeight] = useState('');
   const [savingSession, setSavingSession] = useState(false);
-  const [userProfile, setUserProfile] = useState<any>(null);
-  const [weeklyStatus, setWeeklyStatus] = useState<any>({});
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [weeklyStatus, setWeeklyStatus] = useState<WeeklyStatus>({});
   const [loading, setLoading] = useState(true);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [sessionLocked, setSessionLocked] = useState(false);
@@ -145,7 +159,7 @@ export default function StrengthTrainingPage() {
     // Check if exercise was completed in this session
     const sessionCompleted = completedExercises.some(ex => ex.exerciseTitle === exerciseTitle);
     // Check if exercise was completed in a previous session this week
-    const weeklyCompleted = weeklyStatus[selectedDay]?.exercises?.some((ex: any) => ex.exerciseTitle === exerciseTitle) || false;
+    const weeklyCompleted = weeklyStatus[selectedDay]?.exercises?.some((ex: CompletedExercise) => ex.exerciseTitle === exerciseTitle) || false;
     return sessionCompleted || weeklyCompleted;
   };
   
@@ -163,22 +177,18 @@ export default function StrengthTrainingPage() {
           const { data: profileData, error: profileError } = await supabase
             .from('users')
             .select('first_name, last_name, fitness_goal')
-            .eq('id', user.id ?? user.uid)
+            .eq('id', user.id)
             .single();
-          
-          if (!profileError) setUserProfile(profileData);
+          if (!profileError) setUserProfile(profileData as UserProfile);
 
           // Fetch weekly workout status
-          const status = await getWeeklyWorkoutStatus(user.id || user.uid, 'strength-training');
-          setWeeklyStatus(status);
-          
+          const status = await getWeeklyWorkoutStatus(user.id, 'strength-training');
+          setWeeklyStatus((status || {}) as WeeklyStatus);
           // Load completed exercises for current day from database
-          if (status && typeof status === 'object' && selectedDay in status && (status as any)[selectedDay]?.exercises) {
-            const dayExercises = (status as any)[selectedDay].exercises || [];
-            console.log('Loading exercises for', selectedDay, ':', dayExercises);
-            setCompletedExercises(dayExercises);
+          if (status && typeof status === 'object' && selectedDay in status && (status as WeeklyStatus)[selectedDay]?.exercises) {
+            const dayExercises = (status as WeeklyStatus)[selectedDay].exercises || [];
+            setCompletedExercises(dayExercises as CompletedExercise[]);
           } else {
-            console.log('No exercises found for', selectedDay);
             setCompletedExercises([]);
           }
         } catch (error) {
@@ -186,13 +196,13 @@ export default function StrengthTrainingPage() {
         }
       } else {
         setUserProfile(null);
-        setWeeklyStatus({});
+        setWeeklyStatus(() => ({} as WeeklyStatus));
         setCompletedExercises([]);
       }
       setLoading(false);
     };
     fetchData();
-  }, [user]);
+  }, [user, selectedDay]);
 
   // Fetch completed exercises for the selected day
   useEffect(() => {
@@ -209,7 +219,7 @@ export default function StrengthTrainingPage() {
         .eq('day_of_week', selectedDay)
         .single();
       if (!error && data && data.exercises) {
-        setCompletedExercises(data.exercises);
+        setCompletedExercises(data.exercises || []);
       } else {
         setCompletedExercises([]);
       }
@@ -220,7 +230,7 @@ export default function StrengthTrainingPage() {
   useEffect(() => {
     const checkSessionLock = async () => {
       if (user) {
-        const completed = await checkWeeklyWorkoutCompletion(user.id || user.uid, 'strength-training', selectedDay);
+        const completed = await checkWeeklyWorkoutCompletion(user.id, 'strength-training', selectedDay);
         setSessionLocked(!!completed);
       } else {
         setSessionLocked(false);
@@ -238,85 +248,12 @@ export default function StrengthTrainingPage() {
 
   const confirmFinishExercise = async () => {
     if (currentExercise) {
-      const completedExercise = {
+      const completedExercise: CompletedExercise = {
         exerciseTitle: currentExercise.title,
         sets: sets,
         weight: weight,
         completedAt: new Date().toISOString()
       };
-      
-      if (user) {
-        try {
-          // Save to exercise_log table
-          const { error: logError } = await supabase.from('exercise_log').insert([
-            {
-              user_id: user.id || user.uid,
-              first_name: userProfile?.first_name || null,
-              last_name: userProfile?.last_name || null,
-              fitness_goal: userProfile?.fitness_goal || null,
-              exercise_name: currentExercise.title,
-              sets: sets,
-              reps_duration: repsDuration,
-              weight_lifted: weight,
-              date: new Date().toISOString(),
-            },
-          ]);
-          
-          if (logError) {
-            console.error('Error saving exercise log:', logError);
-          }
-
-          // Save to weekly_workout_sessions table for tracking
-          const weekStart = getWeekStart();
-          const weekEnd = getWeekEnd();
-          
-          // Check if there's already a session for this day this week
-          const existingSession = await supabase
-            .from('weekly_workout_sessions')
-            .select('*')
-            .eq('user_id', user.id || user.uid)
-            .eq('workout_type', 'strength-training')
-            .eq('day_of_week', selectedDay)
-            .gte('week_start', weekStart.toISOString())
-            .lte('week_start', weekEnd.toISOString())
-            .single();
-
-          if (existingSession.data) {
-            // Update existing session with new exercise
-            const updatedExercises = [...(existingSession.data.exercises || []), completedExercise];
-            await supabase
-              .from('weekly_workout_sessions')
-              .update({ exercises: updatedExercises })
-              .eq('id', existingSession.data.id);
-          } else {
-            // Create new session
-            await supabase
-              .from('weekly_workout_sessions')
-              .insert([{
-                user_id: user.id || user.uid,
-                workout_type: 'strength-training',
-                day_of_week: selectedDay,
-                exercises: [completedExercise],
-                week_start: weekStart.toISOString(),
-                week_end: weekEnd.toISOString()
-              }]);
-          }
-
-          // Refresh weekly status to update the UI
-          const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'strength-training');
-          setWeeklyStatus(newStatus);
-          
-          // Update completed exercises for current day
-          if (newStatus && typeof newStatus === 'object' && selectedDay in newStatus && (newStatus as any)[selectedDay]?.exercises) {
-            setCompletedExercises((newStatus as any)[selectedDay].exercises);
-          }
-          
-        } catch (error) {
-          console.error('Error saving exercise:', error);
-          alert('Error saving exercise: ' + error);
-        }
-      }
-      
       setCompletedExercises(prev => [...prev, completedExercise]);
       setShowFinishModal(false);
       setCurrentExercise(null);
@@ -332,8 +269,7 @@ export default function StrengthTrainingPage() {
     if (!sessionWeight || !user) return;
     setSavingSession(true);
     try {
-      await markWeeklyWorkoutCompleted(user.id || user.uid, 'strength-training', selectedDay, completedExercises);
-      // Insert progress notification if enabled
+      await markWeeklyWorkoutCompleted(user.id, 'strength-training', selectedDay, completedExercises);
       const { data: userPrefs } = await supabase
         .from('users')
         .select('progress_updates')
@@ -353,14 +289,7 @@ export default function StrengthTrainingPage() {
           });
         }
       }
-      // Refresh weekly status
-      const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'strength-training');
-      setWeeklyStatus(newStatus);
-      if (newStatus && typeof newStatus === 'object' && selectedDay in newStatus && (newStatus as any)[selectedDay]?.exercises) {
-        setCompletedExercises((newStatus as any)[selectedDay].exercises);
-      } else {
-        setCompletedExercises([]);
-      }
+      const newStatus = await getWeeklyWorkoutStatus(user.id, 'strength-training');
       setShowFinishSessionModal(false);
       setSessionWeight('');
       setSessionCompleted(true);
@@ -376,7 +305,6 @@ export default function StrengthTrainingPage() {
         setTimeout(() => {
           setSessionCompleted(false);
         }, 3000);
-        // Do not show alert
       } else {
         alert('Error completing session: ' + (error?.message || error));
       }
