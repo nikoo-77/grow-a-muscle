@@ -28,7 +28,11 @@ async function setupTables() {
           medical_info text,
           profile_picture text,
           created_at timestamp with time zone default timezone('utc', now()),
-          last_login timestamp with time zone default timezone('utc', now())
+          last_login timestamp with time zone default timezone('utc', now()),
+          email_notifications boolean default false,
+          workout_reminders boolean default false,
+          progress_updates boolean default false,
+          preferred_workout_time varchar(20)
         );
       `
     });
@@ -79,6 +83,40 @@ async function setupTables() {
         console.log('Policy creation error:', error.message);
       } else {
         console.log('Policy created successfully');
+      }
+    }
+
+    // Add notification preferences to users table
+    await supabase.rpc('exec_sql', {
+      sql: `alter table users add column if not exists email_notifications boolean default false;
+            alter table users add column if not exists workout_reminders boolean default false;
+            alter table users add column if not exists progress_updates boolean default false;
+            alter table users add column if not exists preferred_workout_time varchar(20);`
+    });
+
+    // Create notifications table
+    await supabase.rpc('exec_sql', {
+      sql: `create table if not exists notifications (
+        id uuid primary key default gen_random_uuid(),
+        user_id uuid references users(id) on delete cascade,
+        type varchar(50),
+        message text,
+        read boolean default false,
+        created_at timestamp with time zone default timezone('utc', now())
+      );`
+    });
+
+    // Backfill/test notifications for all users
+    const { data: allUsers } = await supabase.from('users').select('id');
+    if (allUsers && Array.isArray(allUsers)) {
+      for (const u of allUsers) {
+        await supabase.from('notifications').insert([
+          {
+            user_id: u.id,
+            type: 'test',
+            message: 'This is a test notification!',
+          },
+        ]);
       }
     }
 

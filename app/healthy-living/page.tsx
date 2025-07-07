@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import Navbar from "../components/Navbar";
 
 const mealPlans = [
   {
@@ -120,6 +121,42 @@ const articles = [
   }
 ];
 
+// Simple icon SVGs for demonstration
+const icons = {
+  meal: (
+    <svg className="inline-block w-6 h-6 mr-2 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16" /></svg>
+  ),
+  mental: (
+    <svg className="inline-block w-6 h-6 mr-2 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" /><path d="M8 15s1.5 2 4 2 4-2 4-2" /></svg>
+  ),
+  article: (
+    <svg className="inline-block w-6 h-6 mr-2 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2" /><path d="M8 8h8M8 12h8M8 16h4" /></svg>
+  ),
+  drop: (
+    <svg className="inline-block w-5 h-5 mr-2 text-[#60ab66]" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M12 3v12m0 0c-3.866 0-7 2.239-7 5h14c0-2.761-3.134-5-7-5z" /></svg>
+  )
+};
+
+// Fade-in on scroll hook
+function useFadeInOnScroll() {
+  const ref = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const node = ref.current;
+    if (!node) return;
+    const handleScroll = () => {
+      const rect = node.getBoundingClientRect();
+      if (rect.top < window.innerHeight - 100) {
+        node.classList.add("fade-in-visible");
+      }
+    };
+    window.addEventListener("scroll", handleScroll);
+    handleScroll();
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+  return ref;
+}
+
+// Animated Accordion
 function Accordion({ items }: { items: { title: string; content: React.ReactNode }[] }) {
   const [openIdx, setOpenIdx] = useState<number | null>(null);
   return (
@@ -127,16 +164,23 @@ function Accordion({ items }: { items: { title: string; content: React.ReactNode
       {items.map((item, idx) => (
         <div key={idx}>
           <button
-            className={`w-full text-left px-4 py-3 rounded-xl font-semibold text-[#2e3d27] bg-[#e0e5dc] hover:bg-[#d2e3d2] transition flex justify-between items-center shadow-sm`}
+            className={`w-full text-left px-4 py-3 rounded-xl font-semibold text-[#2e3d27] bg-[#e0e5dc] hover:bg-[#d2e3d2] transition flex justify-between items-center shadow-sm group focus:outline-none focus:ring-2 focus:ring-[#60ab66]`}
             onClick={() => setOpenIdx(openIdx === idx ? null : idx)}
             type="button"
+            aria-expanded={openIdx === idx}
           >
-            {item.title}
-            <span>{openIdx === idx ? "-" : "+"}</span>
+            <span className="flex items-center">
+              <svg className={`w-5 h-5 mr-2 transition-transform duration-300 ${openIdx === idx ? 'rotate-90 text-[#60ab66]' : 'text-[#2e3d27]'}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
+              {item.title}
+            </span>
+            <span className="text-xl font-bold text-[#60ab66]">{openIdx === idx ? "–" : "+"}</span>
           </button>
-          {openIdx === idx && (
-            <div className="px-6 py-3 bg-white border border-[#60ab66]/30 rounded-b-xl text-sm shadow-inner">{item.content}</div>
-          )}
+          <div
+            className={`overflow-hidden transition-all duration-500 ${openIdx === idx ? 'max-h-96 opacity-100 py-3' : 'max-h-0 opacity-0 py-0'}`}
+            style={{}}
+          >
+            <div className="px-6 bg-white border border-[#60ab66]/30 rounded-b-xl text-sm shadow-inner">{item.content}</div>
+          </div>
         </div>
       ))}
     </div>
@@ -145,62 +189,75 @@ function Accordion({ items }: { items: { title: string; content: React.ReactNode
 
 export default function HealthyLivingPage() {
   const [hydrationOpen, setHydrationOpen] = useState(false);
+  const nutritionRef = useFadeInOnScroll();
+  const mentalRef = useFadeInOnScroll();
+  const articleRef = useFadeInOnScroll();
   return (
-    <div className="min-h-screen bg-[#f8fdf8] px-4 py-10">
-      <div className="max-w-4xl mx-auto">
-        {/* Back Button */}
-        <div className="mb-8">
-          <a
-            href="/"
-            className="inline-flex items-center text-lg text-[#2e3d27] hover:text-[#60ab66] transition-colors"
-          >
-            <span className="mr-2">←</span>
-            Back to Homepage
-          </a>
-        </div>
-        {/* Header */}
-        <div className="mb-10 text-center">
-          <h1 className="text-5xl font-extrabold text-[#2e3d27] mb-4">Healthy Living Hub</h1>
-          <p className="text-xl text-[#60ab66] font-medium">Your educational and motivational hub for overall wellness</p>
-        </div>
+    <>
+      <Navbar />
+      <div className="min-h-screen bg-[#f8fdf8] px-4 py-10 relative overflow-x-hidden pt-32">
+        {/* Decorative SVG background */}
+        <svg className="absolute top-0 left-0 w-full h-64 opacity-10 pointer-events-none" viewBox="0 0 1440 320"><path fill="#60ab66" fillOpacity="1" d="M0,160L60,170.7C120,181,240,203,360,197.3C480,192,600,160,720,133.3C840,107,960,85,1080,101.3C1200,117,1320,171,1380,197.3L1440,224L1440,0L1380,0C1320,0,1200,0,1080,0C960,0,840,0,720,0C600,0,480,0,360,0C240,0,120,0,60,0L0,0Z"></path></svg>
+        <div className="max-w-4xl mx-auto relative z-10">
+          {/* Header */}
+          <div className="mb-10 text-center">
+            <h1 className="text-5xl font-extrabold text-[#2e3d27] mb-4 drop-shadow-lg">Healthy Living Hub</h1>
+            <p className="text-xl text-[#60ab66] font-medium">Your educational and motivational hub for overall wellness</p>
+          </div>
 
-        {/* Nutrition Tips & Meal Plans */}
-        <section className="mb-12">
-          <div className="bg-gradient-to-br from-[#60ab66] via-[#97d39b] to-[#6ed076] rounded-xl shadow-md p-8 mb-6">
-            <h2 className="text-2xl font-bold text-white mb-4">Nutrition Tips & Meal Plans</h2>
-            <Accordion items={mealPlans} />
-            <div className="mt-4">
-              <button
-                className="w-full text-left px-4 py-3 rounded-xl font-semibold text-[#2e3d27] bg-[#e0e5dc] hover:bg-[#d2e3d2] transition flex justify-between items-center shadow-sm"
-                onClick={() => setHydrationOpen(!hydrationOpen)}
-                type="button"
-              >
-                Hydration Tips & Water Tracker
-                <span>{hydrationOpen ? "-" : "+"}</span>
-              </button>
-              {hydrationOpen && (
-                <div className="px-6 py-3 bg-white border border-[#60ab66]/30 rounded-b-xl text-sm shadow-inner">{hydrationTips}</div>
-              )}
+          {/* Nutrition Tips & Meal Plans */}
+          <section className="mb-12 fade-in-section" ref={nutritionRef}>
+            <div className="bg-gradient-to-br from-[#60ab66] via-[#97d39b] to-[#6ed076] rounded-2xl shadow-2xl p-8 mb-6 backdrop-blur-md border border-[#60ab66]/20">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center">{icons.meal}Nutrition Tips & Meal Plans</h2>
+              <Accordion items={mealPlans} />
+              <div className="mt-4">
+                <button
+                  className="w-full text-left px-4 py-3 rounded-xl font-semibold text-[#2e3d27] bg-[#e0e5dc] hover:bg-[#d2e3d2] transition flex justify-between items-center shadow-sm group focus:outline-none focus:ring-2 focus:ring-[#60ab66]"
+                  onClick={() => setHydrationOpen(!hydrationOpen)}
+                  type="button"
+                  aria-expanded={hydrationOpen}
+                >
+                  <span className="flex items-center">{icons.drop}Hydration Tips & Water Tracker</span>
+                  <span className="text-xl font-bold text-[#60ab66]">{hydrationOpen ? "–" : "+"}</span>
+                </button>
+                <div
+                  className={`overflow-hidden transition-all duration-500 ${hydrationOpen ? 'max-h-40 opacity-100 py-3' : 'max-h-0 opacity-0 py-0'}`}
+                >
+                  <div className="px-6 bg-white border border-[#60ab66]/30 rounded-b-xl text-sm shadow-inner">{hydrationTips}</div>
+                </div>
+              </div>
             </div>
-          </div>
-        </section>
+          </section>
 
-        {/* Mental Wellness & Motivation */}
-        <section className="mb-12">
-          <div className="bg-gradient-to-br from-[#60ab66] via-[#97d39b] to-[#6ed076] rounded-xl shadow-md p-8 mb-6">
-            <h2 className="text-2xl font-bold text-white mb-4">Mental Wellness & Motivation</h2>
-            <Accordion items={mentalWellness} />
-          </div>
-        </section>
+          {/* Mental Wellness & Motivation */}
+          <section className="mb-12 fade-in-section" ref={mentalRef}>
+            <div className="bg-gradient-to-br from-[#60ab66] via-[#97d39b] to-[#6ed076] rounded-2xl shadow-2xl p-8 mb-6 backdrop-blur-md border border-[#60ab66]/20">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center">{icons.mental}Mental Wellness & Motivation</h2>
+              <Accordion items={mentalWellness} />
+            </div>
+          </section>
 
-        {/* Educational Articles */}
-        <section className="mb-8">
-          <div className="bg-gradient-to-br from-[#60ab66] via-[#97d39b] to-[#6ed076] rounded-xl shadow-md p-8">
-            <h2 className="text-2xl font-bold text-white mb-4">Educational Articles</h2>
-            <Accordion items={articles} />
-          </div>
-        </section>
+          {/* Educational Articles */}
+          <section className="mb-8 fade-in-section" ref={articleRef}>
+            <div className="bg-gradient-to-br from-[#60ab66] via-[#97d39b] to-[#6ed076] rounded-2xl shadow-2xl p-8 backdrop-blur-md border border-[#60ab66]/20">
+              <h2 className="text-2xl font-bold text-white mb-4 flex items-center">{icons.article}Educational Articles</h2>
+              <Accordion items={articles} />
+            </div>
+          </section>
+        </div>
+        {/* Fade-in animation styles */}
+        <style jsx global>{`
+          .fade-in-section {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s cubic-bezier(.4,0,.2,1), transform 0.8s cubic-bezier(.4,0,.2,1);
+          }
+          .fade-in-visible {
+            opacity: 1 !important;
+            transform: none !important;
+          }
+        `}</style>
       </div>
-    </div>
+    </>
   );
 } 

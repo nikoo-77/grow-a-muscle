@@ -5,6 +5,7 @@ import Image from "next/image";
 import { useState, useEffect } from "react";
 import { useAuth } from '../../contexts/AuthContext';
 import { supabase } from '../../../lib/supabaseClient';
+import { checkWeeklyWorkoutCompletion, markWeeklyWorkoutCompleted, getWeeklyWorkoutStatus, getWeekStart, getWeekEnd } from '../../../lib/supabaseWorkouts';
 
 const weekDays = [
   "Monday",
@@ -128,6 +129,8 @@ export default function MuscleBuildingPage() {
   const [savingSession, setSavingSession] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const { user } = useAuth();
+  const [sessionLocked, setSessionLocked] = useState(false);
+  const [sessionCompleted, setSessionCompleted] = useState(false);
   
   const workouts = workoutsByDay[selectedDay];
   const isRestDay = workouts.length === 0;
@@ -150,6 +153,18 @@ export default function MuscleBuildingPage() {
     };
     fetchProfile();
   }, [user]);
+
+  useEffect(() => {
+    const checkSessionLock = async () => {
+      if (user) {
+        const completed = await checkWeeklyWorkoutCompletion(user.id || user.uid, 'muscle-building', selectedDay);
+        setSessionLocked(!!completed);
+      } else {
+        setSessionLocked(false);
+      }
+    };
+    checkSessionLock();
+  }, [user, selectedDay]);
 
   const handleFinishExercise = (exercise: Workout) => {
     setCurrentExercise(exercise);
@@ -202,25 +217,49 @@ export default function MuscleBuildingPage() {
   const confirmFinishSession = async () => {
     if (!sessionWeight || !user) return;
     setSavingSession(true);
-    const { error } = await supabase.from('user_workouts').insert([
-      {
-        user_id: user.id || user.uid,
-        date: new Date().toISOString(),
-        weight: parseFloat(sessionWeight),
-        first_name: userProfile?.first_name || null,
-        last_name: userProfile?.last_name || null,
-        fitness_goal: userProfile?.fitness_goal || null,
-        completed_exercise: completedExercises.length,
-        exercise_day: selectedDay,
-      },
-    ]);
-    if (error) {
-      alert('Error saving session: ' + error.message);
+    try {
+      await markWeeklyWorkoutCompleted(user.id || user.uid, 'muscle-building', selectedDay, completedExercises);
+      const { data: userPrefs } = await supabase
+        .from('users')
+        .select('progress_updates')
+        .eq('id', user.id)
+        .single();
+      if (userPrefs && userPrefs.progress_updates) {
+        await supabase.from('notifications').insert([
+          {
+            user_id: user.id,
+            type: 'progress',
+            message: `Congrats! You completed your ${selectedDay} muscle building session.`,
+          },
+        ]);
+        if (window.Notification && Notification.permission === 'granted') {
+          new Notification('Workout Complete!', {
+            body: `Congrats! You completed your ${selectedDay} muscle building session.`
+          });
+        }
+      }
+      const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'muscle-building');
+      setShowFinishSessionModal(false);
+      setSessionWeight('');
+      setSessionCompleted(true);
+      setSessionLocked(true);
+      setTimeout(() => {
+        setSessionCompleted(false);
+      }, 3000);
+    } catch (error: any) {
+      if (error?.message && error.message.includes('already been completed this week')) {
+        setSessionLocked(true);
+        setShowFinishSessionModal(false);
+        setSessionCompleted(true);
+        setTimeout(() => {
+          setSessionCompleted(false);
+        }, 3000);
+      } else {
+        alert('Error completing session: ' + (error?.message || error));
+      }
+    } finally {
+      setSavingSession(false);
     }
-    setShowFinishSessionModal(false);
-    setCompletedExercises([]);
-    setSessionWeight('');
-    setSavingSession(false);
   };
 
   return (
@@ -277,152 +316,48 @@ export default function MuscleBuildingPage() {
                       </div>
                       <button
                         className={`mt-4 font-semibold py-2 px-4 rounded-xl transition ${
-                          isCurrentDay
-                            ? isExerciseCompleted(w.title)
-                              ? "bg-green-600 text-white cursor-default"
-                              : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
-                            : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                          !isCurrentDay || sessionLocked || isExerciseCompleted(w.title)
+                            ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                            : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
                         }`}
-                        onClick={() => isCurrentDay && !isExerciseCompleted(w.title) && handleFinishExercise(w)}
-                        disabled={!isCurrentDay || isExerciseCompleted(w.title)}
+                        onClick={() => isCurrentDay && !sessionLocked && !isExerciseCompleted(w.title) && handleFinishExercise(w)}
+                        disabled={!isCurrentDay || sessionLocked || isExerciseCompleted(w.title)}
                       >
-                        {isExerciseCompleted(w.title) 
-                          ? "✓ Completed" 
-                          : "Finish Exercise"
-                        }
+                        {isExerciseCompleted(w.title) ? "✓ Completed" : "Finish Exercise"}
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="flex justify-center mt-8">
+              <div className="flex flex-col items-center justify-center mt-8">
                 <button 
-                  className={`font-semibold py-3 px-8 rounded-xl text-lg transition ${
-                    isCurrentDay 
-                      ? completedCount > 0 
+                  className={`font-semibold py-3 px-8 rounded-xl text-lg transition w-full max-w-md mb-2 ${
+                    sessionLocked || completedCount === 0 
+                      ? "bg-gray-400 text-gray-600 cursor-not-allowed" 
+                      : completedCount > 0 
                         ? "bg-green-600 text-white cursor-pointer hover:bg-green-700" 
                         : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
-                      : "bg-gray-400 text-gray-600 cursor-not-allowed"
                   }`}
-                  onClick={isCurrentDay ? handleFinishSession : undefined}
-                  disabled={!isCurrentDay}
+                  onClick={!sessionLocked && completedCount > 0 ? handleFinishSession : undefined}
+                  disabled={sessionLocked || completedCount === 0}
                 >
-                  {isCurrentDay 
-                    ? completedCount > 0 
+                  {sessionLocked 
+                    ? "SESSION LOCKED UNTIL NEXT WEEK" 
+                    : completedCount > 0 
                       ? `FINISH SESSION (${completedCount}/${totalExercises})` 
-                      : "FINISH SESSION"
-                    : "FINISH SESSION (Today Only)"
+                      : "COMPLETE EXERCISES TO FINISH SESSION"
                   }
                 </button>
+                {sessionLocked && (
+                  <div className="text-center mt-2 text-sm text-red-600 font-semibold w-full max-w-md">
+                    This session is locked until next week. You have already finished this session.
+                  </div>
+                )}
               </div>
             </>
           )}
         </section>
       </main>
-
-      {/* Finish Exercise Modal */}
-      {showFinishModal && currentExercise && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h3 className="text-2xl font-bold mb-4 text-[#2e3d27]">Complete Exercise</h3>
-            <p className="text-lg mb-6 text-[#2e3d27]">{currentExercise.title}</p>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Number of Sets</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="20"
-                  value={sets}
-                  onChange={(e) => setSets(parseInt(e.target.value) || 1)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Number of Reps/Duration</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="1000"
-                  value={repsDuration}
-                  onChange={(e) => setRepsDuration(parseInt(e.target.value) || 0)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
-                  placeholder="Enter reps or duration"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Weight Used (kg)</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.5"
-                  value={weight}
-                  onChange={(e) => setWeight(parseFloat(e.target.value) || 0)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
-                  placeholder="0 for bodyweight exercises"
-                />
-              </div>
-            </div>
-            
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowFinishModal(false)}
-                className="flex-1 py-2 px-4 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmFinishExercise}
-                className="flex-1 py-2 px-4 bg-[#60ab66] text-white rounded-lg font-semibold hover:bg-[#4c8a53] transition"
-              >
-                Complete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Finish Session Modal */}
-      {showFinishSessionModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4">
-            <h3 className="text-2xl font-bold mb-4 text-[#2e3d27]">Complete Session</h3>
-            <p className="text-lg mb-6 text-[#2e3d27]">
-              You have completed <span className="font-bold">{completedExercises.length}</span> workouts.
-            </p>
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2 text-[#2e3d27]">Current Weight (kg)</label>
-              <input
-                type="number"
-                min="0"
-                step="any"
-                value={sessionWeight}
-                onChange={e => setSessionWeight(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-[#2e3d27]"
-                placeholder="Enter your current weight"
-                required
-              />
-            </div>
-            <div className="flex gap-3 mt-6">
-              <button
-                onClick={() => setShowFinishSessionModal(false)}
-                className="flex-1 py-2 px-4 bg-gray-300 text-gray-700 rounded-lg font-semibold hover:bg-gray-400 transition"
-                disabled={savingSession}
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmFinishSession}
-                className="flex-1 py-2 px-4 bg-[#60ab66] text-white rounded-lg font-semibold hover:bg-[#4c8a53] transition"
-                disabled={!sessionWeight || savingSession}
-              >
-                {savingSession ? 'Saving...' : 'Complete'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
-} 
+}
