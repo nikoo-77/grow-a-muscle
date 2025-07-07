@@ -83,6 +83,7 @@ export default function ImproveFlexibilityPage() {
   const [sessionLocked, setSessionLocked] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [savingSession, setSavingSession] = useState(false);
+  const [weeklyStatus, setWeeklyStatus] = useState<any>({});
 
   useEffect(() => {
     function getRandomWorkouts(): Workout[] {
@@ -112,6 +113,42 @@ export default function ImproveFlexibilityPage() {
     };
     checkSessionLock();
   }, [user, selectedDay]);
+
+  // Fetch completed exercises for the selected day
+  useEffect(() => {
+    async function fetchCompletedExercises() {
+      if (!user) {
+        setCompletedExercises([]);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('weekly_workout_sessions')
+        .select('exercises')
+        .eq('user_id', user.id)
+        .eq('workout_type', 'improve-flexibility')
+        .eq('day_of_week', selectedDay)
+        .single();
+      if (!error && data && data.exercises) {
+        setCompletedExercises(data.exercises);
+      } else {
+        setCompletedExercises([]);
+      }
+    }
+    fetchCompletedExercises();
+  }, [user, selectedDay]);
+
+  // Fetch weekly workout status for all days
+  useEffect(() => {
+    async function fetchWeeklyStatus() {
+      if (!user) {
+        setWeeklyStatus({});
+        return;
+      }
+      const status = await getWeeklyWorkoutStatus(user.id, 'improve-flexibility');
+      setWeeklyStatus(status || {});
+    }
+    fetchWeeklyStatus();
+  }, [user]);
 
   const workouts = workoutsByDay[selectedDay];
   const isRestDay = workouts.length === 0;
@@ -203,15 +240,30 @@ export default function ImproveFlexibilityPage() {
         <h1 className="text-3xl font-bold text-[#60ab66] mb-2 tracking-tight">Improve Flexibility Workouts</h1>
         {/* Day Selector */}
         <div className="flex justify-center gap-2 mb-6 flex-wrap">
-          {weekDays.map((day) => (
-            <button
-              key={day}
-              onClick={() => setSelectedDay(day)}
-              className={`px-4 py-2 rounded-lg font-semibold transition border-2 ${selectedDay === day ? "bg-[#60ab66] text-white border-[#60ab66]" : "bg-white text-[var(--foreground)] border-[#e0e5dc] hover:bg-[#e0e5dc]"}`}
-            >
-              {day}
-            </button>
-          ))}
+          {weekDays.map((day) => {
+            const dayCompletedExercises = weeklyStatus[day]?.exercises || [];
+            const hasCompletedExercises = dayCompletedExercises.length > 0;
+            return (
+              <button
+                key={day}
+                onClick={() => setSelectedDay(day)}
+                className={`px-4 py-2 rounded-lg font-semibold transition border-2 relative ${
+                  selectedDay === day
+                    ? "bg-[#60ab66] text-white border-[#60ab66]"
+                    : hasCompletedExercises
+                    ? "bg-green-100 text-green-700 border-green-300"
+                    : "bg-white text-[var(--foreground)] border-[#e0e5dc] hover:bg-[#e0e5dc]"
+                }`}
+              >
+                {day}
+                {hasCompletedExercises && (
+                  <span className="absolute -top-1 -right-1 bg-green-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                    {dayCompletedExercises.length}
+                  </span>
+                )}
+              </button>
+            );
+          })}
         </div>
         <section className="w-full max-w-4xl bg-white rounded-xl shadow p-6 mb-8">
           <h2 className="text-2xl font-bold text-[#60ab66] mb-1">{selectedDay}</h2>

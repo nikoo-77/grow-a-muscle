@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
+import { getTotalCompletedWorkoutSessions } from '../../lib/supabaseWorkouts';
 
 type NotificationPrefKey = 'email_notifications' | 'workout_reminders' | 'progress_updates';
 
@@ -34,6 +35,8 @@ export default function AccountSettingsPage() {
   });
   const [prefsLoading, setPrefsLoading] = useState(true);
   const [prefsError, setPrefsError] = useState('');
+  const [workoutsDone, setWorkoutsDone] = useState<number | null>(null);
+  const [workoutsDoneLoading, setWorkoutsDoneLoading] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -76,6 +79,17 @@ export default function AccountSettingsPage() {
           }
           setPrefsLoading(false);
         });
+    }
+  }, [user]);
+
+  // Fetch total completed workouts
+  useEffect(() => {
+    if (user) {
+      setWorkoutsDoneLoading(true);
+      getTotalCompletedWorkoutSessions(user.id)
+        .then(count => setWorkoutsDone(count))
+        .catch(() => setWorkoutsDone(0))
+        .finally(() => setWorkoutsDoneLoading(false));
     }
   }, [user]);
 
@@ -140,11 +154,16 @@ export default function AccountSettingsPage() {
       setDeleting(false);
       return;
     }
-    // Delete user
-    const { error } = await supabase.auth.admin.deleteUser(user.id);
+    // Call API route to delete user
+    const response = await fetch('/api/delete-user', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId: user.id }),
+    });
+    const result = await response.json();
     setDeleting(false);
-    if (error) {
-      setDeleteError(error.message);
+    if (!response.ok) {
+      setDeleteError(result.error || 'Failed to delete account.');
     } else {
       setDeleteSuccess('Account deleted successfully.');
       setShowDeleteAccount(false);
@@ -267,7 +286,9 @@ export default function AccountSettingsPage() {
               </div>
               <div className="p-4 border border-[#e6f4ea] bg-[#f8fdf8] rounded-lg">
                 <p className="text-sm text-[#60ab66]">Workouts Done</p>
-                <p className="text-lg font-semibold">0</p>
+                <p className="text-lg font-semibold">
+                  {workoutsDoneLoading ? 'Loading...' : workoutsDone ?? 0}
+                </p>
               </div>
             </div>
           </div>

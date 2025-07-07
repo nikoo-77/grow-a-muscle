@@ -194,19 +194,28 @@ export default function StrengthTrainingPage() {
     fetchData();
   }, [user]);
 
-  // Separate useEffect to handle day changes
+  // Fetch completed exercises for the selected day
   useEffect(() => {
-    if (user && weeklyStatus && Object.keys(weeklyStatus).length > 0) {
-      // Load completed exercises for the selected day
-      if (weeklyStatus[selectedDay]?.exercises) {
-        console.log('Day change - loading exercises for', selectedDay, ':', weeklyStatus[selectedDay].exercises);
-        setCompletedExercises(weeklyStatus[selectedDay].exercises);
+    async function fetchCompletedExercises() {
+      if (!user) {
+        setCompletedExercises([]);
+        return;
+      }
+      const { data, error } = await supabase
+        .from('weekly_workout_sessions')
+        .select('exercises')
+        .eq('user_id', user.id)
+        .eq('workout_type', 'strength-training')
+        .eq('day_of_week', selectedDay)
+        .single();
+      if (!error && data && data.exercises) {
+        setCompletedExercises(data.exercises);
       } else {
-        console.log('Day change - no exercises for', selectedDay);
         setCompletedExercises([]);
       }
     }
-  }, [selectedDay, weeklyStatus, user]);
+    fetchCompletedExercises();
+  }, [user, selectedDay]);
 
   useEffect(() => {
     const checkSessionLock = async () => {
