@@ -8,6 +8,7 @@ import { supabase } from '../../lib/supabaseClient';
 import { BellIcon } from '@heroicons/react/24/outline';
 import Link from "next/link";
 import Image from "next/image";
+import { UserProfile } from '../types/UserProfile';
 
 type Notification = { id: string; type: string; message: string; read: boolean; created_at?: string };
 
@@ -27,10 +28,10 @@ export default function Navbar() {
       if (user && typeof user === 'object' && 'id' in user) {
         const { data, error } = await supabase
           .from('users')
-          .select('height, weight, fitness_goal, profile_picture, workout_time, workout_reminders')
+          .select('id, first_name, last_name, email, gender, experience_level, workout_time, fitness_goal, created_at, last_login, height, weight, medical_info, emergency_contacts, profile_picture')
           .eq('id', (user as User).id)
           .single();
-        if (!error) setUserProfile(data);
+        if (!error) setUserProfile(data as UserProfile);
       } else {
         setUserProfile(null);
       }
@@ -136,7 +137,7 @@ export default function Navbar() {
   }
 
   useEffect(() => {
-    if (!user || typeof user !== 'object' || !('id' in user) || !userProfile?.workout_time || !userProfile?.workout_reminders) return;
+    if (!user || typeof user !== 'object' || !('id' in user) || !userProfile?.workout_time) return;
     setInvalidTime(false);
     // Parse workout_time (e.g., '6:00 PM' or '18:00')
     const parseTime = (timeStr: string) => {
@@ -195,7 +196,7 @@ export default function Navbar() {
     };
     const timer = scheduleNextNotification();
     return () => timer && clearTimeout(timer);
-  }, [user, userProfile?.workout_time, userProfile?.workout_reminders]);
+  }, [user, userProfile?.workout_time]);
 
   // Delete a single notification
   const handleDeleteNotification = async (notifId: string) => {
