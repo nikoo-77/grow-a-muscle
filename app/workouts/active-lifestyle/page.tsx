@@ -74,6 +74,14 @@ const workoutsByDay: { [key: string]: Workout[] } = {
   Sunday: [],
 };
 
+// Define interfaces for weekly status
+interface WeeklyStatusDay {
+  exercises?: CompletedExercise[];
+}
+interface WeeklyStatus {
+  [day: string]: WeeklyStatusDay;
+}
+
 export default function ActiveLifestylePage() {
   const { user } = useAuth();
 
@@ -94,7 +102,7 @@ export default function ActiveLifestylePage() {
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const [savingSession, setSavingSession] = useState(false);
   const [showSignInPrompt, setShowSignInPrompt] = useState(false);
-  const [weeklyStatus, setWeeklyStatus] = useState<any>({});
+  const [weeklyStatus, setWeeklyStatus] = useState<WeeklyStatus>({});
   
   const workouts = workoutsByDay[selectedDay];
   const isRestDay = workouts.length === 0;
@@ -144,7 +152,7 @@ export default function ActiveLifestylePage() {
     if (!user) return;
     setSavingSession(true);
     try {
-      await markWeeklyWorkoutCompleted(user.id || user.uid, 'active-lifestyle', selectedDay, completedExercises);
+      await markWeeklyWorkoutCompleted(user.id, 'active-lifestyle', selectedDay, completedExercises);
       const { data: userPrefs } = await supabase
         .from('users')
         .select('progress_updates')
@@ -164,7 +172,7 @@ export default function ActiveLifestylePage() {
           });
         }
       }
-      const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'active-lifestyle');
+      const newStatus = await getWeeklyWorkoutStatus(user.id, 'active-lifestyle');
       setShowFinishSessionModal(false);
       setSessionCompleted(true);
       setSessionLocked(true);
@@ -190,7 +198,7 @@ export default function ActiveLifestylePage() {
   useEffect(() => {
     const checkSessionLock = async () => {
       if (user) {
-        const completed = await checkWeeklyWorkoutCompletion(user.id || user.uid, 'active-lifestyle', selectedDay);
+        const completed = await checkWeeklyWorkoutCompletion(user.id, 'active-lifestyle', selectedDay);
         setSessionLocked(!!completed);
       } else {
         setSessionLocked(false);
@@ -214,7 +222,7 @@ export default function ActiveLifestylePage() {
         .eq('day_of_week', selectedDay)
         .single();
       if (!error && data && data.exercises) {
-        setCompletedExercises(data.exercises);
+        setCompletedExercises(data.exercises as CompletedExercise[]);
       } else {
         setCompletedExercises([]);
       }
@@ -226,11 +234,11 @@ export default function ActiveLifestylePage() {
   useEffect(() => {
     async function fetchWeeklyStatus() {
       if (!user) {
-        setWeeklyStatus({});
+        setWeeklyStatus(() => ({} as WeeklyStatus));
         return;
       }
       const status = await getWeeklyWorkoutStatus(user.id, 'active-lifestyle');
-      setWeeklyStatus(status || {});
+      setWeeklyStatus((status || {}) as WeeklyStatus);
     }
     fetchWeeklyStatus();
   }, [user]);

@@ -38,7 +38,11 @@ function ImageModal({ open, imageUrl, name, onClose }: ImageModalProps) {
         >
           ×
         </button>
-        <img src={imageUrl} alt="Profile or post" className="max-h-[70vh] max-w-[90vw] rounded-xl object-contain mb-2" />
+        <img
+          src={String(imageUrl || '/logo1.png')}
+          alt={String(name || 'Profile or post')}
+          className="max-h-[70vh] max-w-[90vw] rounded-xl object-contain mb-2"
+        />
         {name && <div className="text-lg font-semibold text-[#222] text-center mt-2">{name}</div>}
       </div>
     </div>
@@ -175,17 +179,40 @@ function PostImageCarousel({ images, onImageClick }: { images: string[]; onImage
   );
 }
 
+interface Post {
+  id: string;
+  user_id: string;
+  content: string;
+  image_url?: string | null;
+  image_urls?: string[];
+  created_at: string;
+  user_profile?: { first_name?: string; last_name?: string; profile_picture?: string };
+}
+interface Comment {
+  id: string;
+  post_id: string;
+  user_id: string;
+  content: string;
+  image_url?: string | null;
+  created_at: string;
+}
+interface Like {
+  id: string;
+  post_id: string;
+  user_id: string;
+}
+
 export default function CommunityPage() {
   const { user } = useAuth();
-  const [posts, setPosts] = useState<any[]>([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [newPost, setNewPost] = useState("");
   const [imageFiles, setImageFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>({});
   const [commentImages, setCommentImages] = useState<{ [key: string]: File | null }>({});
   const [commenting, setCommenting] = useState<{ [key: string]: boolean }>({});
-  const [comments, setComments] = useState<{ [key: string]: any[] }>({});
-  const [likes, setLikes] = useState<{ [key: string]: any[] }>({});
+  const [comments, setComments] = useState<{ [key: string]: Comment[] }>({});
+  const [likes, setLikes] = useState<{ [key: string]: Like[] }>({});
   const [liking, setLiking] = useState<{ [key: string]: boolean }>({});
   const [likeAnimation, setLikeAnimation] = useState<{ [key: string]: boolean }>({});
   const [userProfiles, setUserProfiles] = useState<{ [key: string]: { profile_picture?: string; first_name?: string; last_name?: string } }>({});
@@ -240,18 +267,13 @@ export default function CommunityPage() {
   useEffect(() => {
     const channel = supabase
       .channel("public:post_likes")
-      .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, (payload: any) => {
-        // Handle both INSERT and DELETE events
-        if (payload.new && payload.new.post_id) {
-          // New like added
-          fetchLikes(payload.new.post_id).then((likesArr) => 
-            setLikes((l) => ({ ...l, [payload.new.post_id]: likesArr }))
-          );
-        } else if (payload.old && payload.old.post_id) {
-          // Like removed
-          fetchLikes(payload.old.post_id).then((likesArr) => 
-            setLikes((l) => ({ ...l, [payload.old.post_id]: likesArr }))
-          );
+      .on("postgres_changes", { event: "*", schema: "public", table: "post_likes" }, (payload) => {
+        if (payload && typeof payload.new === 'object' && payload.new && 'post_id' in payload.new && (payload.new as { post_id?: string }).post_id) {
+          const postId = (payload.new as { post_id: string }).post_id;
+          fetchLikes(postId).then((likesArr) => setLikes((l) => ({ ...l, [postId]: likesArr })));
+        } else if (payload && typeof payload.old === 'object' && payload.old && 'post_id' in payload.old && (payload.old as { post_id?: string }).post_id) {
+          const postId = (payload.old as { post_id: string }).post_id;
+          fetchLikes(postId).then((likesArr) => setLikes((l) => ({ ...l, [postId]: likesArr })));
         }
       })
       .subscribe();
@@ -264,12 +286,10 @@ export default function CommunityPage() {
   useEffect(() => {
     const channel = supabase
       .channel("public:comments")
-      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, (payload: any) => {
-        // Only refetch comments for the specific post that changed
-        if (payload.new && payload.new.post_id) {
-          fetchComments(payload.new.post_id).then((commentsArr) => 
-            setComments((c) => ({ ...c, [payload.new.post_id]: commentsArr }))
-          );
+      .on("postgres_changes", { event: "*", schema: "public", table: "comments" }, (payload) => {
+        if (payload && typeof payload.new === 'object' && payload.new && 'post_id' in payload.new && (payload.new as { post_id?: string }).post_id) {
+          const postId = (payload.new as { post_id: string }).post_id;
+          fetchComments(postId).then((commentsArr) => setComments((c) => ({ ...c, [postId]: commentsArr })));
         }
       })
       .subscribe();
@@ -343,8 +363,16 @@ export default function CommunityPage() {
       try {
         image_urls = await Promise.all(imageFiles.map(file => uploadPostImage(file)));
       } catch (e) {
-        const err = e as any;
-        alert(err?.message || err?.details || JSON.stringify(err));
+        const err = e as unknown;
+        let msg = '';
+        if (typeof err === 'object' && err !== null) {
+          if ('message' in err && typeof (err as any).message === 'string') msg = (err as any).message;
+          else if ('details' in err && typeof (err as any).details === 'string') msg = (err as any).details;
+          else msg = JSON.stringify(err);
+        } else {
+          msg = String(err);
+        }
+        alert(msg);
         setUploading(false);
         return;
       }
@@ -391,8 +419,16 @@ export default function CommunityPage() {
         return newComments;
       });
     } catch (e) {
-      const err = e as any;
-      alert(err?.message || err?.details || JSON.stringify(err));
+      const err = e as unknown;
+      let msg = '';
+      if (typeof err === 'object' && err !== null) {
+        if ('message' in err && typeof (err as any).message === 'string') msg = (err as any).message;
+        else if ('details' in err && typeof (err as any).details === 'string') msg = (err as any).details;
+        else msg = JSON.stringify(err);
+      } else {
+        msg = String(err);
+      }
+      alert(msg);
       // Remove the temporary post if there was an error
       setPosts((prev) => prev.filter(p => p.id !== tempId));
       // Clean up temporary data
@@ -469,8 +505,16 @@ export default function CommunityPage() {
         }
       }
     } catch (e) {
-      const err = e as any;
-      alert(err?.message || err?.details || JSON.stringify(err));
+      const err = e as unknown;
+      let msg = '';
+      if (typeof err === 'object' && err !== null) {
+        if ('message' in err && typeof (err as any).message === 'string') msg = (err as any).message;
+        else if ('details' in err && typeof (err as any).details === 'string') msg = (err as any).details;
+        else msg = JSON.stringify(err);
+      } else {
+        msg = String(err);
+      }
+      alert(msg);
       if (userLiked) {
         setLikes((l) => ({ ...l, [postId]: [...currentLikes] }));
       } else {
@@ -496,8 +540,16 @@ export default function CommunityPage() {
       try {
         image_url = await uploadPostImage(commentImage);
       } catch (e) {
-        const err = e as any;
-        alert(err?.message || err?.details || JSON.stringify(err));
+        const err = e as unknown;
+        let msg = '';
+        if (typeof err === 'object' && err !== null) {
+          if ('message' in err && typeof (err as any).message === 'string') msg = (err as any).message;
+          else if ('details' in err && typeof (err as any).details === 'string') msg = (err as any).details;
+          else msg = JSON.stringify(err);
+        } else {
+          msg = String(err);
+        }
+        alert(msg);
         setCommenting((c) => ({ ...c, [postId]: false }));
         return;
       }
@@ -544,8 +596,16 @@ export default function CommunityPage() {
         }
       }
     } catch (e) {
-      const err = e as any;
-      alert(err?.message || err?.details || JSON.stringify(err));
+      const err = e as unknown;
+      let msg = '';
+      if (typeof err === 'object' && err !== null) {
+        if ('message' in err && typeof (err as any).message === 'string') msg = (err as any).message;
+        else if ('details' in err && typeof (err as any).details === 'string') msg = (err as any).details;
+        else msg = JSON.stringify(err);
+      } else {
+        msg = String(err);
+      }
+      alert(msg);
       setComments((prev) => ({ ...prev, [postId]: (prev[postId] || []).filter(c => c.id !== tempId) }));
     } finally {
       setCommenting((c) => ({ ...c, [postId]: false }));
@@ -576,8 +636,16 @@ export default function CommunityPage() {
       }
       setDeleteModal(null);
     } catch (e) {
-      const err = e as any;
-      alert(err?.message || err?.details || JSON.stringify(err));
+      const err = e as unknown;
+      let msg = '';
+      if (typeof err === 'object' && err !== null) {
+        if ('message' in err && typeof (err as any).message === 'string') msg = (err as any).message;
+        else if ('details' in err && typeof (err as any).details === 'string') msg = (err as any).details;
+        else msg = JSON.stringify(err);
+      } else {
+        msg = String(err);
+      }
+      alert(msg);
     } finally {
       setDeleting(false);
     }
@@ -738,9 +806,9 @@ export default function CommunityPage() {
                   <div className="flex gap-4 items-start">
                     <img
                       src={postUserProfile?.profile_picture || "/logo1.png"}
-                      alt="User avatar"
+                      alt={String(postUserProfile?.first_name || postUserProfile?.last_name ? `${postUserProfile?.first_name || ''} ${postUserProfile?.last_name || ''}`.trim() : 'User avatar')}
                       className="w-14 h-14 rounded-full border-2 border-[#60ab66] object-cover cursor-pointer"
-                      onClick={() => setImageModal({ url: postUserProfile?.profile_picture || "/logo1.png", name: postUserProfile?.first_name || postUserProfile?.last_name ? `${postUserProfile?.first_name || ""} ${postUserProfile?.last_name || ""}`.trim() : undefined })}
+                      onClick={() => setImageModal({ url: postUserProfile?.profile_picture || "/logo1.png", name: postUserProfile?.first_name || postUserProfile?.last_name ? `${postUserProfile?.first_name || ''} ${postUserProfile?.last_name || ''}`.trim() : undefined })}
                     />
                     <div className="flex-1 flex flex-col">
                       <div className="flex items-center gap-2 mb-1">
@@ -748,7 +816,7 @@ export default function CommunityPage() {
                           {post.user_id === user?.id
                             ? "You"
                             : postUserProfile?.first_name || postUserProfile?.last_name
-                            ? `${postUserProfile?.first_name || ""} ${postUserProfile?.last_name || ""}`.trim()
+                            ? `${postUserProfile?.first_name || ''} ${postUserProfile?.last_name || ''}`.trim()
                             : "User"}
                         </span>
                         <span className="text-xs text-gray-400">
@@ -825,7 +893,7 @@ export default function CommunityPage() {
                       {(comments[post.id] || []).map((comment) => {
                         // Handle both regular comments and temporary comments
                         const isTempComment = comment.id.startsWith('temp-');
-                        const commentUserProfile = comment.user_profile || userProfiles[comment.user_id];
+                        const commentUserProfile = userProfiles[comment.user_id];
                         
                         return (
                           <div
@@ -833,17 +901,17 @@ export default function CommunityPage() {
                             className={`flex gap-2 items-start bg-[#f6f9f6] rounded-xl px-4 py-2 ${isTempComment ? 'opacity-75' : ''}`}
                           >
                             <img
-                              src={commentUserProfile?.profile_picture || "/logo1.png"}
-                              alt="User avatar"
+                              src={String(commentUserProfile?.profile_picture || '/logo1.png')}
+                              alt={String(commentUserProfile?.first_name || commentUserProfile?.last_name ? `${commentUserProfile?.first_name || ''} ${commentUserProfile?.last_name || ''}`.trim() : 'User avatar')}
                               className="w-8 h-8 rounded-full border border-[#60ab66] object-cover cursor-pointer"
-                              onClick={() => setImageModal({ url: commentUserProfile?.profile_picture || "/logo1.png", name: commentUserProfile?.first_name || commentUserProfile?.last_name ? `${commentUserProfile?.first_name || ""} ${commentUserProfile?.last_name || ""}`.trim() : undefined })}
+                              onClick={() => setImageModal({ url: String(commentUserProfile?.profile_picture || '/logo1.png'), name: commentUserProfile?.first_name || commentUserProfile?.last_name ? `${commentUserProfile?.first_name || ''} ${commentUserProfile?.last_name || ''}`.trim() : undefined })}
                             />
                             <div>
                               <span className="font-bold text-[#222] text-sm mr-2">
                                 {comment.user_id === user?.id
                                   ? "You"
                                   : commentUserProfile?.first_name || commentUserProfile?.last_name
-                                  ? `${commentUserProfile?.first_name || ""} ${commentUserProfile?.last_name || ""}`.trim()
+                                  ? `${commentUserProfile?.first_name || ''} ${commentUserProfile?.last_name || ''}`.trim()
                                   : "User"}
                               </span>
                               <span className="text-xs text-gray-400">
@@ -864,10 +932,10 @@ export default function CommunityPage() {
                               <p className="text-[#222] text-base whitespace-pre-line">{comment.content}</p>
                               {comment.image_url && (
                                 <img
-                                  src={comment.image_url}
-                                  alt="Comment image"
+                                  src={String(comment.image_url || '/logo1.png')}
+                                  alt={String(comment.image_url || 'Comment image')}
                                   className="rounded-lg max-h-60 object-contain border border-[#e0e5dc] mt-2 cursor-pointer"
-                                  onClick={() => setImageModal({ url: comment.image_url })}
+                                  onClick={() => setImageModal({ url: String(comment.image_url || '/logo1.png') })}
                                 />
                               )}
                             </div>
@@ -879,10 +947,10 @@ export default function CommunityPage() {
                     {user ? (
                       <div className="flex gap-2 mt-2 items-start">
                         <img
-                          src={userProfiles[user.id]?.profile_picture || "/logo1.png"}
-                          alt="User avatar"
+                          src={String(userProfiles[user.id]?.profile_picture || '/logo1.png')}
+                          alt={String(userProfiles[user.id]?.first_name || userProfiles[user.id]?.last_name ? `${userProfiles[user.id]?.first_name || ''} ${userProfiles[user.id]?.last_name || ''}`.trim() : 'User avatar')}
                           className="w-8 h-8 rounded-full border border-[#60ab66] object-cover cursor-pointer"
-                          onClick={() => setImageModal({ url: userProfiles[user.id]?.profile_picture || "/logo1.png", name: userProfiles[user.id]?.first_name || userProfiles[user.id]?.last_name ? `${userProfiles[user.id]?.first_name || ""} ${userProfiles[user.id]?.last_name || ""}`.trim() : undefined })}
+                          onClick={() => setImageModal({ url: String(userProfiles[user.id]?.profile_picture || '/logo1.png'), name: userProfiles[user.id]?.first_name || userProfiles[user.id]?.last_name ? `${userProfiles[user.id]?.first_name || ''} ${userProfiles[user.id]?.last_name || ''}`.trim() : undefined })}
                         />
                         <div className="flex-1 flex flex-col gap-2">
                           <textarea

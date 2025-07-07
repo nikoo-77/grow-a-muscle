@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 import { getTotalCompletedWorkoutSessions } from '../../lib/supabaseWorkouts';
+import Link from "next/link";
 
 type NotificationPrefKey = 'email_notifications' | 'workout_reminders' | 'progress_updates';
 
@@ -193,13 +194,13 @@ export default function AccountSettingsPage() {
       <div className="max-w-5xl mx-auto">
         {/* Back Button */}
         <div className="mb-6">
-          <a
+          <Link
             href="/"
             className="inline-flex items-center text-xl hover:text-[#60ab66] transition-colors"
           >
             <span className="mr-2">←</span>
             Back to Homepage
-          </a>
+          </Link>
         </div>
 
         {/* Header */}

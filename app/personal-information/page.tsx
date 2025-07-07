@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -21,7 +22,7 @@ interface UserProfile {
   height?: number | null;
   weight?: number | null;
   medical_info?: string;
-  emergency_contacts?: any;
+  emergency_contacts?: unknown;
   profile_picture?: string;
 }
 
@@ -160,41 +161,41 @@ export default function PersonalInformationPage() {
         onClose={() => setOpenModal(null)}
         userProfile={userProfile}
         user={user}
-        onSave={updated => setUserProfile(updated)}
+        onSave={(updated: UserProfile) => setUserProfile(updated)}
       />
       <EditFitnessProfileModal
         open={openModal === "fitness"}
         onClose={() => setOpenModal(null)}
         userProfile={userProfile}
         user={user}
-        onSave={updated => setUserProfile(updated)}
+        onSave={(updated: UserProfile) => setUserProfile(updated)}
       />
       <AddProfilePictureModal
         open={openModal === "picture"}
         onClose={() => setOpenModal(null)}
         user={user}
-        onSave={url => setUserProfile(prev => prev ? { ...prev, profile_picture: url } : null)}
+        onSave={(url: string) => setUserProfile(prev => prev ? { ...prev, profile_picture: url } : null)}
       />
       <SetHeightWeightModal
         open={openModal === "heightWeight"}
         onClose={() => setOpenModal(null)}
         user={user}
         userProfile={userProfile}
-        onSave={data => setUserProfile(prev => prev ? { ...prev, height: data.height, weight: data.weight } : null)}
+        onSave={(data: { height: number | null; weight: number | null }) => setUserProfile(prev => prev ? { ...prev, height: data.height, weight: data.weight } : null)}
       />
       <AddMedicalInfoModal
         open={openModal === "medical"}
         onClose={() => setOpenModal(null)}
         user={user}
         userProfile={userProfile}
-        onSave={data => setUserProfile(prev => prev ? { ...prev, medical_info: data.medical_info } : null)}
+        onSave={(data: { medical_info: string }) => setUserProfile(prev => prev ? { ...prev, medical_info: data.medical_info } : null)}
       />
       <AddEmergencyContactsModal
         open={openModal === "emergency"}
         onClose={() => setOpenModal(null)}
         user={user}
         userProfile={userProfile}
-        onSave={data => setUserProfile(prev => prev ? { ...prev, emergency_contacts: data.emergency_contacts, first_name: prev.first_name, last_name: prev.last_name, email: prev.email, fitness_goal: prev.fitness_goal, created_at: prev.created_at, last_login: prev.last_login, height: prev.height, weight: prev.weight, medical_info: prev.medical_info } : null)}
+        onSave={(data: { emergency_contacts: unknown }) => setUserProfile(prev => prev ? { ...prev, emergency_contacts: data.emergency_contacts, first_name: prev.first_name, last_name: prev.last_name, email: prev.email, fitness_goal: prev.fitness_goal, created_at: prev.created_at, last_login: prev.last_login, height: prev.height, weight: prev.weight, medical_info: prev.medical_info } : null)}
       />
       <div className="max-w-5xl mx-auto">
         {/* Back Button */}
@@ -294,7 +295,7 @@ function ActionButton({ label, onClick }: { label: string; onClick?: () => void 
 }
 
 // Modal for editing basic info
-function EditBasicInfoModal({ open, onClose, userProfile, user, onSave }: { open: boolean; onClose: () => void; userProfile: UserProfile | null; user: any; onSave: (updated: UserProfile) => void }) {
+function EditBasicInfoModal({ open, onClose, userProfile, user, onSave }: { open: boolean; onClose: () => void; userProfile: UserProfile | null; user: { id: string; email?: string }; onSave: (updated: UserProfile) => void }) {
   const [first_name, setFirstName] = useState(userProfile?.first_name || "");
   const [last_name, setLastName] = useState(userProfile?.last_name || "");
   const [email, setEmail] = useState(userProfile?.email || user?.email || "");
@@ -317,8 +318,12 @@ function EditBasicInfoModal({ open, onClose, userProfile, user, onSave }: { open
       if (error) throw error;
       onSave({ ...(userProfile || {}), first_name, last_name, email } as UserProfile);
       onClose();
-    } catch (e: any) {
-      setError("Failed to save. Please try again.");
+    } catch (e: unknown) {
+      let msg = "Failed to update profile";
+      if (typeof e === 'object' && e !== null && 'message' in e && typeof (e as any).message === 'string') {
+        msg = (e as any).message;
+      }
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -355,7 +360,7 @@ function EditBasicInfoModal({ open, onClose, userProfile, user, onSave }: { open
 }
 
 // Modal for editing fitness profile
-function EditFitnessProfileModal({ open, onClose, userProfile, user, onSave }: { open: boolean; onClose: () => void; userProfile: UserProfile | null; user: any; onSave: (updated: UserProfile) => void }) {
+function EditFitnessProfileModal({ open, onClose, userProfile, user, onSave }: { open: boolean; onClose: () => void; userProfile: UserProfile | null; user: { id: string; email?: string }; onSave: (updated: UserProfile) => void }) {
   const [gender, setGender] = useState(userProfile?.gender || "");
   const [experience_level, setExperienceLevel] = useState(userProfile?.experience_level || "");
   const [workout_time, setWorkoutTime] = useState(userProfile?.workout_time || "");
@@ -379,8 +384,12 @@ function EditFitnessProfileModal({ open, onClose, userProfile, user, onSave }: {
       onSave({ ...(userProfile || {}), gender, experience_level, workout_time } as UserProfile);
       onClose();
       window.location.reload();
-    } catch (e: any) {
-      setError("Failed to save. Please try again.");
+    } catch (e: unknown) {
+      let msg = "Failed to update fitness profile";
+      if (typeof e === 'object' && e !== null && 'message' in e && typeof (e as any).message === 'string') {
+        msg = (e as any).message;
+      }
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -440,7 +449,7 @@ function EditFitnessProfileModal({ open, onClose, userProfile, user, onSave }: {
 }
 
 // Modal for adding profile picture
-function AddProfilePictureModal({ open, onClose, user, onSave }: { open: boolean; onClose: () => void; user: any; onSave: (url: string) => void }) {
+function AddProfilePictureModal({ open, onClose, user, onSave }: { open: boolean; onClose: () => void; user: { id: string; email?: string }; onSave: (url: string) => void }) {
   const [file, setFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -476,8 +485,13 @@ function AddProfilePictureModal({ open, onClose, user, onSave }: { open: boolean
       if (updateError) throw updateError;
       onSave(publicUrl);
       onClose();
-    } catch (e: any) {
-      setError("Failed to upload. Please try again.");
+    } catch (e: unknown) {
+      let msg = "Failed to upload profile picture";
+      if (typeof e === 'object' && e !== null && 'message' in e && typeof (e as any).message === 'string') {
+        msg = (e as any).message;
+      }
+      setError(msg);
+    } finally {
       setSaving(false);
     }
   };
@@ -507,7 +521,7 @@ function AddProfilePictureModal({ open, onClose, user, onSave }: { open: boolean
 }
 
 // Modal for setting height and weight
-function SetHeightWeightModal({ open, onClose, user, userProfile, onSave }: { open: boolean; onClose: () => void; user: any; userProfile: UserProfile | null; onSave: (data: { height: number | null; weight: number | null }) => void }) {
+function SetHeightWeightModal({ open, onClose, user, userProfile, onSave }: { open: boolean; onClose: () => void; user: { id: string; email?: string }; userProfile: UserProfile | null; onSave: (data: { height: number | null; weight: number | null }) => void }) {
   const [height, setHeight] = useState(userProfile?.height || null);
   const [weight, setWeight] = useState(userProfile?.weight || null);
   const [saving, setSaving] = useState(false);
@@ -524,8 +538,12 @@ function SetHeightWeightModal({ open, onClose, user, userProfile, onSave }: { op
       if (error) throw error;
       onSave({ height, weight });
       onClose();
-    } catch (e: any) {
-      setError("Failed to save. Please try again.");
+    } catch (e: unknown) {
+      let msg = "Failed to update height/weight";
+      if (typeof e === 'object' && e !== null && 'message' in e && typeof (e as any).message === 'string') {
+        msg = (e as any).message;
+      }
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -558,7 +576,7 @@ function SetHeightWeightModal({ open, onClose, user, userProfile, onSave }: { op
 }
 
 // Modal for adding medical info
-function AddMedicalInfoModal({ open, onClose, user, userProfile, onSave }: { open: boolean; onClose: () => void; user: any; userProfile: UserProfile | null; onSave: (data: { medical_info: string }) => void }) {
+function AddMedicalInfoModal({ open, onClose, user, userProfile, onSave }: { open: boolean; onClose: () => void; user: { id: string; email?: string }; userProfile: UserProfile | null; onSave: (data: { medical_info: string }) => void }): React.ReactElement | null {
   const [medical_info, setMedicalInfo] = useState(userProfile?.medical_info || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -574,8 +592,12 @@ function AddMedicalInfoModal({ open, onClose, user, userProfile, onSave }: { ope
       if (error) throw error;
       onSave({ medical_info });
       onClose();
-    } catch (e: any) {
-      setError("Failed to save. Please try again.");
+    } catch (e: unknown) {
+      let msg = "Failed to update medical info";
+      if (typeof e === 'object' && e !== null && 'message' in e && typeof (e as any).message === 'string') {
+        msg = (e as any).message;
+      }
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -604,8 +626,8 @@ function AddMedicalInfoModal({ open, onClose, user, userProfile, onSave }: { ope
 }
 
 // Modal for adding emergency contacts
-function AddEmergencyContactsModal({ open, onClose, user, userProfile, onSave }: { open: boolean; onClose: () => void; user: any; userProfile: UserProfile | null; onSave: (data: { emergency_contacts: any }) => void }) {
-  const [emergency_contacts, setEmergencyContacts] = useState(userProfile?.emergency_contacts || "");
+function AddEmergencyContactsModal({ open, onClose, user, userProfile, onSave }: { open: boolean; onClose: () => void; user: { id: string; email?: string }; userProfile: UserProfile | null; onSave: (data: { emergency_contacts: unknown }) => void }): React.ReactElement | null {
+  const [emergency_contacts, setEmergencyContacts] = useState<string>(userProfile?.emergency_contacts as string || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const handleSave = async () => {
@@ -620,8 +642,12 @@ function AddEmergencyContactsModal({ open, onClose, user, userProfile, onSave }:
       if (error) throw error;
       onSave({ emergency_contacts });
       onClose();
-    } catch (e: any) {
-      setError("Failed to save. Please try again.");
+    } catch (e: unknown) {
+      let msg = "Failed to update emergency contacts";
+      if (typeof e === 'object' && e !== null && 'message' in e && typeof (e as any).message === 'string') {
+        msg = (e as any).message;
+      }
+      setError(msg);
     } finally {
       setSaving(false);
     }
@@ -635,7 +661,7 @@ function AddEmergencyContactsModal({ open, onClose, user, userProfile, onSave }:
           <form className="space-y-4" onSubmit={e => { e.preventDefault(); handleSave(); }}>
             <div>
               <label className="block text-sm font-medium">Emergency Contacts</label>
-              <textarea className="w-full border rounded px-3 py-2" value={emergency_contacts} onChange={e => setEmergencyContacts(e.target.value)} />
+              <input className="w-full border rounded px-3 py-2" value={typeof emergency_contacts === 'string' ? emergency_contacts : ''} onChange={e => setEmergencyContacts(e.target.value)} />
             </div>
             {error && <div className="text-red-500 text-sm">{error}</div>}
             <div className="flex gap-2 mt-4">

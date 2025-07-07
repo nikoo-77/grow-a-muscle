@@ -71,6 +71,19 @@ const workoutsByDay: { [key: string]: Workout[] } = {
   Sunday: [],
 };
 
+// Define interfaces for user profile and weekly status
+interface UserProfile {
+  first_name?: string;
+  last_name?: string;
+  fitness_goal?: string;
+}
+interface WeeklyStatusDay {
+  exercises?: CompletedExercise[];
+}
+interface WeeklyStatus {
+  [day: string]: WeeklyStatusDay;
+}
+
 export default function ImproveEnduranceStaminaPage() {
   // Get current day of the week
   const getCurrentDay = () => {
@@ -90,11 +103,11 @@ export default function ImproveEnduranceStaminaPage() {
   const [savingSession, setSavingSession] = useState(false);
   const [personalizedWorkouts, setPersonalizedWorkouts] = useState<{ [key: string]: Workout[] } | null>(null);
   const [loadingWorkouts, setLoadingWorkouts] = useState(true);
-  const [userProfile, setUserProfile] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [repsDuration, setRepsDuration] = useState(0);
   const [sessionLocked, setSessionLocked] = useState(false);
   const [sessionCompleted, setSessionCompleted] = useState(false);
-  const [weeklyStatus, setWeeklyStatus] = useState<any>({});
+  const [weeklyStatus, setWeeklyStatus] = useState<WeeklyStatus>({});
   
   useEffect(() => {
     const fetchOrCreateWorkouts = async () => {
@@ -109,7 +122,7 @@ export default function ImproveEnduranceStaminaPage() {
       const { data, error } = await supabase
         .from('user_program_workouts')
         .select('day, workouts')
-        .eq('user_id', user.id ?? user.uid)
+        .eq('user_id', user.id)
         .eq('goal_key', goalKey);
       if (!error && data && data.length === 7) {
         // Build workoutsByDay from DB
@@ -127,7 +140,7 @@ export default function ImproveEnduranceStaminaPage() {
           const w = day === "Wednesday" || day === "Sunday" ? [] : getRandomWorkouts();
           generated[day] = w;
           return {
-            user_id: user.id ?? user.uid,
+            user_id: user.id,
             goal_key: goalKey,
             day,
             workouts: w,
@@ -148,9 +161,9 @@ export default function ImproveEnduranceStaminaPage() {
         const { data, error } = await supabase
           .from('users')
           .select('first_name, last_name, fitness_goal')
-          .eq('id', user.id ?? user.uid)
+          .eq('id', user.id)
           .single();
-        if (!error) setUserProfile(data);
+        if (!error) setUserProfile(data as UserProfile);
       } else {
         setUserProfile(null);
       }
@@ -161,7 +174,7 @@ export default function ImproveEnduranceStaminaPage() {
   useEffect(() => {
     const checkSessionLock = async () => {
       if (user) {
-        const completed = await checkWeeklyWorkoutCompletion(user.id || user.uid, 'improve-endurance-and-stamina', selectedDay);
+        const completed = await checkWeeklyWorkoutCompletion(user.id, 'improve-endurance-and-stamina', selectedDay);
         setSessionLocked(!!completed);
       } else {
         setSessionLocked(false);
@@ -185,7 +198,7 @@ export default function ImproveEnduranceStaminaPage() {
         .eq('day_of_week', selectedDay)
         .single();
       if (!error && data && data.exercises) {
-        setCompletedExercises(data.exercises);
+        setCompletedExercises(data.exercises as CompletedExercise[]);
       } else {
         setCompletedExercises([]);
       }
@@ -197,11 +210,11 @@ export default function ImproveEnduranceStaminaPage() {
   useEffect(() => {
     async function fetchWeeklyStatus() {
       if (!user) {
-        setWeeklyStatus({});
+        setWeeklyStatus(() => ({} as WeeklyStatus));
         return;
       }
       const status = await getWeeklyWorkoutStatus(user.id, 'improve-endurance-and-stamina');
-      setWeeklyStatus(status || {});
+      setWeeklyStatus((status || {}) as WeeklyStatus);
     }
     fetchWeeklyStatus();
   }, [user]);
@@ -231,7 +244,7 @@ export default function ImproveEnduranceStaminaPage() {
       if (user) {
         const { error } = await supabase.from('exercise_log').insert([
           {
-            user_id: user.id || user.uid,
+            user_id: user.id,
             first_name: userProfile?.first_name || null,
             last_name: userProfile?.last_name || null,
             fitness_goal: userProfile?.fitness_goal || null,
@@ -265,8 +278,7 @@ export default function ImproveEnduranceStaminaPage() {
     if (!sessionWeight || !user) return;
     setSavingSession(true);
     try {
-      await markWeeklyWorkoutCompleted(user.id || user.uid, 'improve-endurance-and-stamina', selectedDay, completedExercises);
-      // Insert progress notification if enabled
+      await markWeeklyWorkoutCompleted(user.id, 'improve-endurance-and-stamina', selectedDay, completedExercises);
       const { data: userPrefs } = await supabase
         .from('users')
         .select('progress_updates')
@@ -286,7 +298,7 @@ export default function ImproveEnduranceStaminaPage() {
           });
         }
       }
-      const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'improve-endurance-and-stamina');
+      const newStatus = await getWeeklyWorkoutStatus(user.id, 'improve-endurance-and-stamina');
       setShowFinishSessionModal(false);
       setSessionWeight('');
       setSessionCompleted(true);

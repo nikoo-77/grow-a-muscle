@@ -72,8 +72,12 @@ export default function SignupPage() {
         return;
       }
       router.push("/");
-    } catch (error: any) {
-      setError(error.message || "Failed to create account");
+    } catch (error: unknown) {
+      let msg = "Failed to create account";
+      if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as any).message === 'string') {
+        msg = (error as any).message;
+      }
+      setError(msg);
     } finally {
       setLoading(false);
     }

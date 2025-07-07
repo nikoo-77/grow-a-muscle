@@ -7,13 +7,27 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend
 } from "recharts";
 
+// Define interfaces for analytics data
+interface WeightData {
+  date: string;
+  weight: number;
+}
+interface WorkoutData {
+  date: string;
+  completed: number;
+}
+interface VolumeData {
+  date: string;
+  volume: number;
+}
+
 export default function ProgressPage() {
   const { user } = useAuth();
   const [goals, setGoals] = useState<string[]>([]);
   const [selectedGoal, setSelectedGoal] = useState<string>("");
-  const [weightData, setWeightData] = useState<any[]>([]);
-  const [workoutData, setWorkoutData] = useState<any[]>([]);
-  const [volumeData, setVolumeData] = useState<any[]>([]);
+  const [weightData, setWeightData] = useState<WeightData[]>([]);
+  const [workoutData, setWorkoutData] = useState<WorkoutData[]>([]);
+  const [volumeData, setVolumeData] = useState<VolumeData[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Fetch available fitness goals for the user
@@ -23,11 +37,11 @@ export default function ProgressPage() {
       const { data: workouts } = await supabase
         .from("user_workouts")
         .select("fitness_goal")
-        .eq("user_id", user.id || user.uid);
+        .eq("user_id", user.id);
       const { data: logs } = await supabase
         .from("exercise_log")
         .select("fitness_goal")
-        .eq("user_id", user.id || user.uid);
+        .eq("user_id", user.id);
       const allGoals = [
         ...(workouts?.map(w => w.fitness_goal) || []),
         ...(logs?.map(l => l.fitness_goal) || [])
@@ -58,14 +72,14 @@ export default function ProgressPage() {
       const { data: workouts } = await supabase
         .from("user_workouts")
         .select("date, weight, completed_exercise, fitness_goal")
-        .eq("user_id", user.id || user.uid)
+        .eq("user_id", user.id)
         .eq("fitness_goal", selectedGoal)
         .order("date", { ascending: true });
       // 2. Volume Lifted
       const { data: logs } = await supabase
         .from("exercise_log")
         .select("date, sets, reps_duration, weight_lifted, fitness_goal")
-        .eq("user_id", user.id || user.uid)
+        .eq("user_id", user.id)
         .eq("fitness_goal", selectedGoal);
       // Weight Progress
       setWeightData(
