@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabaseClient';
 
+type NotificationPrefKey = 'email_notifications' | 'workout_reminders' | 'progress_updates';
+
 export default function AccountSettingsPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
@@ -21,6 +23,17 @@ export default function AccountSettingsPage() {
   const [deletePw, setDeletePw] = useState('');
   const [loginHistory, setLoginHistory] = useState<{ login_at: string }[]>([]);
   const [loginHistoryLoading, setLoginHistoryLoading] = useState(false);
+  const [notificationPrefs, setNotificationPrefs] = useState<{
+    email_notifications: boolean;
+    workout_reminders: boolean;
+    progress_updates: boolean;
+  }>({
+    email_notifications: false,
+    workout_reminders: false,
+    progress_updates: false,
+  });
+  const [prefsLoading, setPrefsLoading] = useState(true);
+  const [prefsError, setPrefsError] = useState('');
 
   useEffect(() => {
     if (!loading && !user) {
@@ -43,6 +56,28 @@ export default function AccountSettingsPage() {
         });
     }
   }, [showLoginHistory, user]);
+
+  // Fetch notification preferences
+  useEffect(() => {
+    if (user) {
+      setPrefsLoading(true);
+      supabase
+        .from('users')
+        .select('email_notifications, workout_reminders, progress_updates')
+        .eq('id', user.id)
+        .single()
+        .then(({ data, error }) => {
+          if (!error && data) {
+            setNotificationPrefs({
+              email_notifications: data.email_notifications ?? false,
+              workout_reminders: data.workout_reminders ?? false,
+              progress_updates: data.progress_updates ?? false,
+            });
+          }
+          setPrefsLoading(false);
+        });
+    }
+  }, [user]);
 
   if (loading) {
     return (
@@ -117,6 +152,23 @@ export default function AccountSettingsPage() {
     }
   }
 
+  // Update notification preferences
+  async function handleTogglePref(prefKey: NotificationPrefKey) {
+    setPrefsError('');
+    setPrefsLoading(true);
+    const newValue = !notificationPrefs[prefKey];
+    const { error } = await supabase
+      .from('users')
+      .update({ [prefKey]: newValue })
+      .eq('id', user.id);
+    if (error) {
+      setPrefsError('Failed to update preferences.');
+    } else {
+      setNotificationPrefs(p => ({ ...p, [prefKey]: newValue }));
+    }
+    setPrefsLoading(false);
+  }
+
   return (
     <div className="min-h-screen bg-[#f8fdf8] px-6 py-10 text-[#2e3d27]">
       <div className="max-w-5xl mx-auto">
@@ -171,15 +223,31 @@ export default function AccountSettingsPage() {
           <div className="bg-white border border-[#60ab66] p-8 rounded-xl shadow-sm">
             <h2 className="text-3xl font-bold mb-4 text-[#2e3d27]">Notifications</h2>
             <div className="space-y-4">
-              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
+              <button
+                className={`w-full text-left p-4 rounded-lg text-lg transition flex items-center justify-between ${notificationPrefs.email_notifications ? 'bg-[#60ab66] text-white' : 'bg-gray-100 text-[#2e3d27]'}`}
+                onClick={() => handleTogglePref('email_notifications')}
+                disabled={prefsLoading}
+              >
                 Email Notifications
+                <span className={`ml-2 w-5 h-5 rounded-full border-2 ${notificationPrefs.email_notifications ? 'bg-white border-white' : 'bg-gray-300 border-gray-400'}`}></span>
               </button>
-              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
+              <button
+                className={`w-full text-left p-4 rounded-lg text-lg transition flex items-center justify-between ${notificationPrefs.workout_reminders ? 'bg-[#60ab66] text-white' : 'bg-gray-100 text-[#2e3d27]'}`}
+                onClick={() => handleTogglePref('workout_reminders')}
+                disabled={prefsLoading}
+              >
                 Workout Reminders
+                <span className={`ml-2 w-5 h-5 rounded-full border-2 ${notificationPrefs.workout_reminders ? 'bg-white border-white' : 'bg-gray-300 border-gray-400'}`}></span>
               </button>
-              <button className="w-full text-left p-4 bg-[#60ab66] hover:bg-[#6ed076] text-white rounded-lg text-lg transition">
+              <button
+                className={`w-full text-left p-4 rounded-lg text-lg transition flex items-center justify-between ${notificationPrefs.progress_updates ? 'bg-[#60ab66] text-white' : 'bg-gray-100 text-[#2e3d27]'}`}
+                onClick={() => handleTogglePref('progress_updates')}
+                disabled={prefsLoading}
+              >
                 Progress Updates
+                <span className={`ml-2 w-5 h-5 rounded-full border-2 ${notificationPrefs.progress_updates ? 'bg-white border-white' : 'bg-gray-300 border-gray-400'}`}></span>
               </button>
+              {prefsError && <div className="text-red-600 mt-2">{prefsError}</div>}
             </div>
           </div>
 

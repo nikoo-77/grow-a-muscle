@@ -126,6 +126,7 @@ export default function StrengthTrainingPage() {
   const [weeklyStatus, setWeeklyStatus] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [sessionLocked, setSessionLocked] = useState(false);
   const { user } = useAuth();
   
   const workouts = workoutsByDay[selectedDay];
@@ -138,6 +139,15 @@ export default function StrengthTrainingPage() {
   const isDayCompleted = weeklyStatus[selectedDay]?.completed || false;
   const weekStart = getWeekStart();
   const weekEnd = getWeekEnd();
+  
+  // Define isExerciseCompleted BEFORE using it
+  const isExerciseCompleted = (exerciseTitle: string) => {
+    // Check if exercise was completed in this session
+    const sessionCompleted = completedExercises.some(ex => ex.exerciseTitle === exerciseTitle);
+    // Check if exercise was completed in a previous session this week
+    const weeklyCompleted = weeklyStatus[selectedDay]?.exercises?.some((ex: any) => ex.exerciseTitle === exerciseTitle) || false;
+    return sessionCompleted || weeklyCompleted;
+  };
   
   // Show completion status immediately after finishing session
   const showCompletionStatus = isDayCompleted || (sessionCompleted && selectedDay === getCurrentDay());
@@ -197,6 +207,18 @@ export default function StrengthTrainingPage() {
       }
     }
   }, [selectedDay, weeklyStatus, user]);
+
+  useEffect(() => {
+    const checkSessionLock = async () => {
+      if (user) {
+        const completed = await checkWeeklyWorkoutCompletion(user.id || user.uid, 'strength-training', selectedDay);
+        setSessionLocked(!!completed);
+      } else {
+        setSessionLocked(false);
+      }
+    };
+    checkSessionLock();
+  }, [user, selectedDay]);
 
   const handleFinishExercise = (exercise: Workout) => {
     setCurrentExercise(exercise);
@@ -293,16 +315,6 @@ export default function StrengthTrainingPage() {
     }
   };
 
-  const isExerciseCompleted = (exerciseTitle: string) => {
-    // Check if exercise was completed in this session
-    const sessionCompleted = completedExercises.some(ex => ex.exerciseTitle === exerciseTitle);
-    
-    // Check if exercise was completed in a previous session this week
-    const weeklyCompleted = weeklyStatus[selectedDay]?.exercises?.some((ex: any) => ex.exerciseTitle === exerciseTitle) || false;
-    
-    return sessionCompleted || weeklyCompleted;
-  };
-
   const handleFinishSession = () => {
     setShowFinishSessionModal(true);
   };
@@ -310,47 +322,55 @@ export default function StrengthTrainingPage() {
   const confirmFinishSession = async () => {
     if (!sessionWeight || !user) return;
     setSavingSession(true);
-    
     try {
-      // Save to the existing user_workouts table for backward compatibility
-      const { error } = await supabase.from('user_workouts').insert([
-        {
-          user_id: user.id || user.uid,
-          date: new Date().toISOString(),
-          weight: parseFloat(sessionWeight),
-          first_name: userProfile?.first_name || null,
-          last_name: userProfile?.last_name || null,
-          fitness_goal: userProfile?.fitness_goal || null,
-          completed_exercise: completedExercises.length,
-          exercise_day: selectedDay,
-        },
-      ]);
-      
-      if (error) {
-        console.error('Error saving to user_workouts:', error.message);
+      await markWeeklyWorkoutCompleted(user.id || user.uid, 'strength-training', selectedDay, completedExercises);
+      // Insert progress notification if enabled
+      const { data: userPrefs } = await supabase
+        .from('users')
+        .select('progress_updates')
+        .eq('id', user.id)
+        .single();
+      if (userPrefs && userPrefs.progress_updates) {
+        await supabase.from('notifications').insert([
+          {
+            user_id: user.id,
+            type: 'progress',
+            message: `Congrats! You completed your ${selectedDay} strength training session.`,
+          },
+        ]);
+        if (window.Notification && Notification.permission === 'granted') {
+          new Notification('Workout Complete!', {
+            body: `Congrats! You completed your ${selectedDay} strength training session.`
+          });
+        }
       }
-
       // Refresh weekly status
       const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'strength-training');
       setWeeklyStatus(newStatus);
-      
-      // Update completed exercises for current day
       if (newStatus && typeof newStatus === 'object' && selectedDay in newStatus && (newStatus as any)[selectedDay]?.exercises) {
         setCompletedExercises((newStatus as any)[selectedDay].exercises);
       } else {
         setCompletedExercises([]);
       }
-      
       setShowFinishSessionModal(false);
       setSessionWeight('');
       setSessionCompleted(true);
-      
-      // Show success message for a few seconds
+      setSessionLocked(true);
       setTimeout(() => {
         setSessionCompleted(false);
       }, 3000);
     } catch (error: any) {
-      alert('Error completing session: ' + error.message);
+      if (error?.message && error.message.includes('already been completed this week')) {
+        setSessionLocked(true);
+        setShowFinishSessionModal(false);
+        setSessionCompleted(true);
+        setTimeout(() => {
+          setSessionCompleted(false);
+        }, 3000);
+        // Do not show alert
+      } else {
+        alert('Error completing session: ' + (error?.message || error));
+      }
     } finally {
       setSavingSession(false);
     }
@@ -472,12 +492,12 @@ export default function StrengthTrainingPage() {
                       </div>
                       <button
                         className={`mt-4 font-semibold py-2 px-4 rounded-xl transition ${
-                          isExerciseCompleted(w.title)
-                            ? "bg-green-600 text-white cursor-default"
+                          !isCurrentDay || sessionLocked || isExerciseCompleted(w.title)
+                            ? "bg-gray-400 text-gray-600 cursor-not-allowed"
                             : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
                         }`}
-                        onClick={() => !isExerciseCompleted(w.title) && handleFinishExercise(w)}
-                        disabled={isExerciseCompleted(w.title)}
+                        onClick={() => isCurrentDay && !sessionLocked && !isExerciseCompleted(w.title) && handleFinishExercise(w)}
+                        disabled={!isCurrentDay || sessionLocked || isExerciseCompleted(w.title)}
                       >
                         {isExerciseCompleted(w.title) ? "✓ Completed" : "Finish Exercise"}
                       </button>
@@ -485,25 +505,28 @@ export default function StrengthTrainingPage() {
                   </div>
                 ))}
               </div>
-              <div className="flex justify-center mt-8">
+              <div className="flex flex-col items-center justify-center mt-8">
                 <button 
-                  className={`font-semibold py-3 px-8 rounded-xl text-lg transition ${
-                    completedCount > 0 
-                      ? "bg-green-600 text-white cursor-pointer hover:bg-green-700" 
-                      : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
+                  className={`font-semibold py-3 px-8 rounded-xl text-lg transition w-full max-w-md mb-2 ${
+                    sessionLocked || completedCount === 0 
+                      ? "bg-gray-400 text-gray-600 cursor-not-allowed" 
+                      : completedCount > 0 
+                        ? "bg-green-600 text-white cursor-pointer hover:bg-green-700" 
+                        : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
                   }`}
-                  onClick={completedCount > 0 ? handleFinishSession : undefined}
-                  disabled={completedCount === 0}
+                  onClick={!sessionLocked && completedCount > 0 ? handleFinishSession : undefined}
+                  disabled={sessionLocked || completedCount === 0}
                 >
-                  {completedCount > 0 
-                    ? `FINISH SESSION (${completedCount}/${totalExercises})` 
-                    : "COMPLETE EXERCISES TO FINISH SESSION"
+                  {sessionLocked 
+                    ? "SESSION LOCKED UNTIL NEXT WEEK" 
+                    : completedCount > 0 
+                      ? `FINISH SESSION (${completedCount}/${totalExercises})` 
+                      : "COMPLETE EXERCISES TO FINISH SESSION"
                   }
                 </button>
-                {completedCount > 0 && (
-                  <div className="text-center mt-4 text-sm text-gray-600">
-                    <p>Note: Finishing the session will save your progress but won't lock the exercises.</p>
-                    <p>Individual exercises are locked until next week after completion.</p>
+                {sessionLocked && (
+                  <div className="text-center mt-2 text-sm text-red-600 font-semibold w-full max-w-md">
+                    This session is locked until next week. You have already finished this session.
                   </div>
                 )}
               </div>

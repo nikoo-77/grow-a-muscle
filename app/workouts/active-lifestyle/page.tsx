@@ -2,7 +2,10 @@
 
 import Navbar from "../../components/Navbar";
 import Image from "next/image";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { checkWeeklyWorkoutCompletion, markWeeklyWorkoutCompleted, getWeeklyWorkoutStatus, getWeekStart, getWeekEnd } from '../../../lib/supabaseWorkouts';
+import { useAuth } from '../../contexts/AuthContext';
+import { supabase } from '../../../lib/supabaseClient';
 
 const weekDays = [
   "Monday",
@@ -71,6 +74,8 @@ const workoutsByDay: { [key: string]: Workout[] } = {
 };
 
 export default function ActiveLifestylePage() {
+  const { user } = useAuth();
+
   // Get current day of the week
   const getCurrentDay = () => {
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -84,6 +89,9 @@ export default function ActiveLifestylePage() {
   const [sets, setSets] = useState(3);
   const [weight, setWeight] = useState(0);
   const [showFinishSessionModal, setShowFinishSessionModal] = useState(false);
+  const [sessionLocked, setSessionLocked] = useState(false);
+  const [sessionCompleted, setSessionCompleted] = useState(false);
+  const [savingSession, setSavingSession] = useState(false);
   
   const workouts = workoutsByDay[selectedDay];
   const isRestDay = workouts.length === 0;
@@ -121,17 +129,64 @@ export default function ActiveLifestylePage() {
     setShowFinishSessionModal(true);
   };
 
-  const confirmFinishSession = () => {
-    // Here you could save the session data to a database or localStorage
-    console.log('Session completed:', {
-      day: selectedDay,
-      completedExercises,
-      completedAt: new Date().toISOString()
-    });
-    setShowFinishSessionModal(false);
-    // Optionally reset completed exercises for the next session
-    setCompletedExercises([]);
+  const confirmFinishSession = async () => {
+    if (!user) return;
+    setSavingSession(true);
+    try {
+      await markWeeklyWorkoutCompleted(user.id || user.uid, 'active-lifestyle', selectedDay, completedExercises);
+      const { data: userPrefs } = await supabase
+        .from('users')
+        .select('progress_updates')
+        .eq('id', user.id)
+        .single();
+      if (userPrefs && userPrefs.progress_updates) {
+        await supabase.from('notifications').insert([
+          {
+            user_id: user.id,
+            type: 'progress',
+            message: `Congrats! You completed your ${selectedDay} active lifestyle session.`,
+          },
+        ]);
+        if (window.Notification && Notification.permission === 'granted') {
+          new Notification('Workout Complete!', {
+            body: `Congrats! You completed your ${selectedDay} active lifestyle session.`
+          });
+        }
+      }
+      const newStatus = await getWeeklyWorkoutStatus(user.id || user.uid, 'active-lifestyle');
+      setShowFinishSessionModal(false);
+      setSessionCompleted(true);
+      setSessionLocked(true);
+      setTimeout(() => {
+        setSessionCompleted(false);
+      }, 3000);
+    } catch (error: any) {
+      if (error?.message && error.message.includes('already been completed this week')) {
+        setSessionLocked(true);
+        setShowFinishSessionModal(false);
+        setSessionCompleted(true);
+        setTimeout(() => {
+          setSessionCompleted(false);
+        }, 3000);
+      } else {
+        alert('Error completing session: ' + (error?.message || error));
+      }
+    } finally {
+      setSavingSession(false);
+    }
   };
+
+  useEffect(() => {
+    const checkSessionLock = async () => {
+      if (user) {
+        const completed = await checkWeeklyWorkoutCompletion(user.id || user.uid, 'active-lifestyle', selectedDay);
+        setSessionLocked(!!completed);
+      } else {
+        setSessionLocked(false);
+      }
+    };
+    checkSessionLock();
+  }, [user, selectedDay]);
 
   return (
     <>
@@ -187,43 +242,43 @@ export default function ActiveLifestylePage() {
                       </div>
                       <button
                         className={`mt-4 font-semibold py-2 px-4 rounded-xl transition ${
-                          isCurrentDay
-                            ? isExerciseCompleted(w.title)
-                              ? "bg-green-600 text-white cursor-default"
-                              : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
-                            : "bg-gray-400 text-gray-600 cursor-not-allowed"
+                          !isCurrentDay || sessionLocked || isExerciseCompleted(w.title)
+                            ? "bg-gray-400 text-gray-600 cursor-not-allowed"
+                            : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
                         }`}
-                        onClick={() => isCurrentDay && !isExerciseCompleted(w.title) && handleFinishExercise(w)}
-                        disabled={!isCurrentDay || isExerciseCompleted(w.title)}
+                        onClick={() => isCurrentDay && !sessionLocked && !isExerciseCompleted(w.title) && handleFinishExercise(w)}
+                        disabled={!isCurrentDay || sessionLocked || isExerciseCompleted(w.title)}
                       >
-                        {isExerciseCompleted(w.title) 
-                          ? "✓ Completed" 
-                          : "Finish Exercise"
-                        }
+                        {isExerciseCompleted(w.title) ? "✓ Completed" : "Finish Exercise"}
                       </button>
                     </div>
                   </div>
                 ))}
               </div>
-              <div className="flex justify-center mt-8">
+              <div className="flex flex-col items-center justify-center mt-8">
                 <button 
-                  className={`font-semibold py-3 px-8 rounded-xl text-lg transition ${
-                    isCurrentDay 
-                      ? completedCount > 0 
+                  className={`font-semibold py-3 px-8 rounded-xl text-lg transition w-full max-w-md mb-2 ${
+                    sessionLocked || completedCount === 0 
+                      ? "bg-gray-400 text-gray-600 cursor-not-allowed" 
+                      : completedCount > 0 
                         ? "bg-green-600 text-white cursor-pointer hover:bg-green-700" 
                         : "bg-[#60ab66] hover:bg-[#4c8a53] text-white"
-                      : "bg-gray-400 text-gray-600 cursor-not-allowed"
                   }`}
-                  onClick={isCurrentDay ? handleFinishSession : undefined}
-                  disabled={!isCurrentDay}
+                  onClick={!sessionLocked && completedCount > 0 ? handleFinishSession : undefined}
+                  disabled={sessionLocked || completedCount === 0}
                 >
-                  {isCurrentDay 
-                    ? completedCount > 0 
+                  {sessionLocked 
+                    ? "SESSION LOCKED UNTIL NEXT WEEK" 
+                    : completedCount > 0 
                       ? `FINISH SESSION (${completedCount}/${totalExercises})` 
-                      : "FINISH SESSION"
-                    : "FINISH SESSION (Today Only)"
+                      : "COMPLETE EXERCISES TO FINISH SESSION"
                   }
                 </button>
+                {sessionLocked && (
+                  <div className="text-center mt-2 text-sm text-red-600 font-semibold w-full max-w-md">
+                    This session is locked until next week. You have already finished this session.
+                  </div>
+                )}
               </div>
             </>
           )}

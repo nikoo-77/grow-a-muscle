@@ -1,5 +1,7 @@
+'use client';
 import React from 'react';
 import Navbar from '../components/Navbar';
+import { motion } from 'framer-motion';
 
 const teamMembers = [
   {
@@ -37,40 +39,118 @@ const teamMembers = [
   },
 ];
 
-const iconStyle = 'w-6 h-6 text-[#60ab66] hover:text-[#2e3d27] transition-colors duration-200';
+const iconStyle = 'w-7 h-7 text-[#60ab66] hover:text-[#2e3d27] hover:scale-110 transition-transform duration-200';
 
 const AboutPage: React.FC = () => {
   return (
     <>
       <Navbar />
-      <section className="w-full min-h-screen bg-white pt-32 pb-20 px-4 flex flex-col items-center">
-        <div className="max-w-4xl w-full mx-auto bg-white/90 rounded-3xl shadow-2xl p-10 flex flex-col gap-8">
-          <h1 className="text-5xl font-extrabold text-[#2e3d27] text-center mb-4">About Grow A Muscle</h1>
-          <p className="text-xl text-[#60ab66] italic text-center mb-6">Empowering you to build strength, confidence, and a healthier lifestyle—one workout at a time.</p>
-          <div className="flex flex-col gap-6">
-            <h2 className="text-3xl font-bold text-[#2e3d27] mb-2">Our Mission</h2>
-            <p className="text-lg text-[#2e3d27]">At Grow A Muscle, our mission is to inspire and empower individuals of all fitness levels to achieve their health and wellness goals. We believe in the power of community, expert guidance, and personalized plans to help you transform your body and your life.</p>
+      {/* Hero Section with full-width background image */}
+      <motion.div
+        className="relative w-full min-h-[400px] md:min-h-[500px] flex items-center justify-center overflow-hidden"
+        style={{zIndex:1}}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+      >
+        <motion.img
+          src="/images/fitness-girl-with-dumbbells-dark-background-isolated_2221-2258.avif"
+          alt="Fitness Girl with Dumbbells"
+          className="absolute inset-0 w-full h-full object-cover object-center"
+          style={{zIndex:1}}
+          initial={{ scale: 1.08, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 1.2 }}
+        />
+        <div className="absolute inset-0 bg-[#222]/70" style={{zIndex:2}} />
+        <motion.div className="relative z-10 flex flex-col items-center justify-center w-full px-4 text-center"
+          initial={{ y: 40, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8, delay: 0.3 }}
+        >
+          <span className="uppercase tracking-widest text-[#60ab66] font-bold text-base md:text-lg mb-2">About Us</span>
+          <h1 className="text-5xl md:text-7xl font-extrabold text-white leading-tight mb-4 drop-shadow-xl">Grow A Muscle</h1>
+          <p className="text-xl md:text-2xl text-[#e0e5dc] font-medium max-w-2xl mx-auto drop-shadow-lg">Empowering you to build strength, confidence, and a healthier lifestyle—one workout at a time.</p>
+        </motion.div>
+      </motion.div>
+      {/* Main Content Section */}
+      <section className="w-full min-h-screen pt-10 pb-20 px-4 flex flex-col items-center bg-gradient-to-br from-[#e8f5e9] via-[#f6fff8] to-[#e0f7fa]">
+        <motion.div
+          className="max-w-5xl w-full mx-auto bg-white/90 rounded-3xl shadow-2xl p-10 flex flex-col gap-12 border border-[#e0e5dc] mt-0"
+          initial={{ opacity: 0, y: 40 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
+        >
+          {/* Mission & Vision */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+            <motion.div
+              className="flex flex-col gap-4 bg-[#f6f9f6] rounded-2xl p-6 shadow-md border border-[#e0e5dc]"
+              initial={{ opacity: 0, x: -30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+            >
+              <h2 className="text-3xl font-bold text-[#60ab66] mb-1 flex items-center gap-2">
+                <span className="inline-block w-3 h-3 bg-[#60ab66] rounded-full"></span>Our Mission
+              </h2>
+              <p className="text-lg text-[#2e3d27]">At Grow A Muscle, our mission is to inspire and empower individuals of all fitness levels to achieve their health and wellness goals. We believe in the power of community, expert guidance, and personalized plans to help you transform your body and your life.</p>
+            </motion.div>
+            <motion.div
+              className="flex flex-col gap-4 bg-[#f6f9f6] rounded-2xl p-6 shadow-md border border-[#e0e5dc]"
+              initial={{ opacity: 0, x: 30 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.1 }}
+            >
+              <h2 className="text-3xl font-bold text-[#60ab66] mb-1 flex items-center gap-2">
+                <span className="inline-block w-3 h-3 bg-[#60ab66] rounded-full"></span>Our Vision
+              </h2>
+              <p className="text-lg text-[#2e3d27]">We envision a world where everyone has access to the tools, knowledge, and support they need to live a healthy, active lifestyle. Our platform is designed to break down barriers and make fitness accessible, enjoyable, and sustainable for all.</p>
+            </motion.div>
           </div>
-          <div className="flex flex-col gap-6">
-            <h2 className="text-3xl font-bold text-[#2e3d27] mb-2">Our Vision</h2>
-            <p className="text-lg text-[#2e3d27]">We envision a world where everyone has access to the tools, knowledge, and support they need to live a healthy, active lifestyle. Our platform is designed to break down barriers and make fitness accessible, enjoyable, and sustainable for all.</p>
-          </div>
+          {/* How It Works Section */}
           <div className="flex flex-col gap-6 mt-10">
-            <h2 className="text-3xl font-bold text-[#2e3d27] mb-2 text-center">Meet Our Team</h2>
-            <p className="text-lg text-[#2e3d27] text-center mb-8">Our philosophy is simple: build with passion, support each other, and deliver the best experience for our users.</p>
-            <div className="flex flex-col md:flex-row justify-center gap-8">
-              {teamMembers.map((member) => (
-                <div key={member.name} className="bg-[#f6f9f6] rounded-2xl shadow-lg p-6 flex flex-col items-center w-full md:w-72">
+            <h2 className="text-3xl font-bold text-[#2e3d27] mb-2">How It Works</h2>
+            <ol className="list-decimal list-inside text-lg text-[#2e3d27] space-y-2 pl-4">
+              <li><span className="font-semibold text-[#60ab66]">Sign Up:</span> Create your free account and set your fitness goals.</li>
+              <li><span className="font-semibold text-[#60ab66]">Personalize:</span> Choose from a variety of programs tailored to your needs—muscle building, weight loss, flexibility, and more.</li>
+              <li><span className="font-semibold text-[#60ab66]">Track Progress:</span> Log your workouts, monitor your progress, and celebrate your achievements with our easy-to-use dashboard.</li>
+              <li><span className="font-semibold text-[#60ab66]">Get Support:</span> Join our community, ask questions, and get advice from experts and fellow members.</li>
+              <li><span className="font-semibold text-[#60ab66]">Stay Motivated:</span> Access tips, articles, and challenges to keep you inspired on your journey.</li>
+            </ol>
+          </div>
+          {/* Meet the Team Section - Redesigned */}
+          <div className="flex flex-col gap-8 mt-6">
+            <div className="flex flex-col items-center gap-2">
+              <h2 className="text-4xl font-extrabold text-[#2e3d27] text-center mb-1 tracking-tight">Meet Our Team</h2>
+              <span className="text-[#60ab66] text-lg font-medium text-center">Our philosophy: build with passion, support each other, and deliver the best experience for our users.</span>
+            </div>
+            <div className="flex flex-col md:flex-row justify-center gap-8 mt-4">
+              {teamMembers.map((member, idx) => (
+                <motion.div
+                  key={member.name}
+                  className="relative bg-white rounded-3xl shadow-xl border border-[#e0e5dc] p-7 flex flex-col items-center w-full md:w-80 group hover:shadow-2xl hover:-translate-y-2 transition-all duration-300"
+                  initial={{ opacity: 0, y: 40 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.6, delay: idx * 0.15 }}
+                  whileHover={{ scale: 1.04, boxShadow: '0 20px 40px -8px rgba(96,171,102,0.15)' }}
+                >
+                  {/* Accent Bar */}
+                  <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-[#60ab66] via-[#6ed076] to-[#97d39b] rounded-t-3xl" />
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-28 h-28 rounded-full object-cover mb-4 border-4 border-[#60ab66] shadow-md"
+                    className="w-28 h-28 rounded-full object-cover mb-4 border-4 border-[#60ab66] shadow-md mt-4"
                   />
-                  <div className="text-center">
-                    <h3 className="text-xl font-bold text-[#2e3d27] mb-1">{member.name}</h3>
-                    <p className="text-[#60ab66] text-base font-medium mb-2">{member.role}</p>
-                    <p className="italic text-[#2e3d27] text-sm mb-3">"{member.quote}"</p>
-                    <div className="flex justify-center gap-4 mt-2">
+                  <div className="text-center flex flex-col items-center">
+                    <h3 className="text-2xl font-bold text-[#2e3d27] mb-1 mt-2 group-hover:text-[#60ab66] transition-colors duration-200">{member.name}</h3>
+                    <p className="text-[#60ab66] text-base font-semibold mb-2">{member.role}</p>
+                    <div className="bg-[#f6f9f6] border border-[#e0e5dc] rounded-xl px-4 py-2 mb-3 mt-1 shadow-sm max-w-xs">
+                      <span className="italic text-[#2e3d27] text-sm">"{member.quote}"</span>
+                    </div>
+                    <div className="flex justify-center gap-5 mt-2">
                       <a href={member.socials.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook">
                         <svg className={iconStyle} fill="currentColor" viewBox="0 0 24 24"><path d="M22.675 0h-21.35C.595 0 0 .592 0 1.326v21.348C0 23.408.595 24 1.325 24h11.495v-9.294H9.692v-3.622h3.128V8.413c0-3.1 1.893-4.788 4.659-4.788 1.325 0 2.463.099 2.797.143v3.24l-1.918.001c-1.504 0-1.797.715-1.797 1.763v2.313h3.587l-.467 3.622h-3.12V24h6.116C23.406 24 24 23.408 24 22.674V1.326C24 .592 23.406 0 22.675 0"/></svg>
                       </a>
@@ -82,18 +162,79 @@ const AboutPage: React.FC = () => {
                       </a>
                     </div>
                   </div>
-                </div>
+                </motion.div>
               ))}
             </div>
           </div>
-          <div className="flex flex-col gap-6 mt-10">
+          {/* End Meet the Team Section */}
+          {/* FAQ Section */}
+          <motion.div
+            className="flex flex-col gap-6 mt-10"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+          >
+            <h2 className="text-3xl font-bold text-[#2e3d27] mb-2">Frequently Asked Questions</h2>
+            <div className="space-y-4">
+              <motion.div className="bg-[#f6f9f6] border border-[#e0e5dc] rounded-xl p-5"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+              >
+                <h3 className="font-semibold text-[#60ab66] text-lg mb-1">Is Grow A Muscle free to use?</h3>
+                <p className="text-[#2e3d27]">Yes! Our core features are free for everyone. We believe in making fitness accessible to all.</p>
+              </motion.div>
+              <motion.div className="bg-[#f6f9f6] border border-[#e0e5dc] rounded-xl p-5"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                <h3 className="font-semibold text-[#60ab66] text-lg mb-1">Do I need any equipment to get started?</h3>
+                <p className="text-[#2e3d27]">No equipment is required for most beginner programs. As you progress, you can incorporate equipment for advanced workouts.</p>
+              </motion.div>
+              <motion.div className="bg-[#f6f9f6] border border-[#e0e5dc] rounded-xl p-5"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <h3 className="font-semibold text-[#60ab66] text-lg mb-1">Can I track my progress?</h3>
+                <p className="text-[#2e3d27]">Absolutely! Our dashboard lets you log workouts, monitor your achievements, and visualize your progress over time.</p>
+              </motion.div>
+              <motion.div className="bg-[#f6f9f6] border border-[#e0e5dc] rounded-xl p-5"
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+              >
+                <h3 className="font-semibold text-[#60ab66] text-lg mb-1">Is there a community I can join?</h3>
+                <p className="text-[#2e3d27]">Yes, we have a vibrant community where you can connect, share tips, and get support from other members and experts.</p>
+              </motion.div>
+            </div>
+          </motion.div>
+          <motion.div
+            className="flex flex-col gap-6 mt-10"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7 }}
+          >
             <h2 className="text-3xl font-bold text-[#2e3d27] mb-2">Join Our Community</h2>
             <p className="text-lg text-[#2e3d27]">Whether you're just starting out or looking to break through plateaus, Grow A Muscle is here for you. Join thousands of users who have transformed their lives and discovered the power of consistency, support, and expert guidance.</p>
-          </div>
-          <div className="flex justify-center mt-8">
-            <a href="/signup" className="bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl">Start Your Journey</a>
-          </div>
-        </div>
+          </motion.div>
+          <motion.div
+            className="flex justify-center mt-8"
+            initial={{ opacity: 0, scale: 0.95 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <a href="/" className="bg-[#60ab66] text-white px-8 py-3 rounded-xl text-lg font-semibold hover:bg-[#6ed076] transition-all duration-300 shadow-md hover:shadow-xl">Start Your Journey</a>
+          </motion.div>
+        </motion.div>
       </section>
     </>
   );

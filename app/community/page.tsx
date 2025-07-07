@@ -417,10 +417,8 @@ export default function CommunityPage() {
       return;
     }
     setLiking((l) => ({ ...l, [postId]: true }));
-    
     const currentLikes = likes[postId] || [];
     const userLiked = currentLikes.some((like) => like.user_id === user.id);
-    
     // Optimistic update - immediately update the UI
     if (userLiked) {
       // Remove like optimistically
@@ -440,35 +438,43 @@ export default function CommunityPage() {
         ...l,
         [postId]: [...currentLikes, optimisticLike]
       }));
-      // Trigger animation for new likes
       setLikeAnimation((a) => ({ ...a, [postId]: true }));
       setTimeout(() => {
         setLikeAnimation((a) => ({ ...a, [postId]: false }));
       }, 300);
     }
-    
     try {
       if (userLiked) {
         await unlikePost({ post_id: postId, user_id: user.id });
       } else {
         await likePost({ post_id: postId, user_id: user.id });
+        // Fetch post to get owner
+        const { data: post } = await supabase
+          .from('posts')
+          .select('user_id')
+          .eq('id', postId)
+          .single();
+        if (post && post.user_id && post.user_id !== user.id) {
+          const actorName = `${userProfiles[user.id]?.first_name || ''} ${userProfiles[user.id]?.last_name || ''}`.trim() || user.email || 'Someone';
+          await supabase.from('notifications').insert([
+            {
+              user_id: post.user_id,
+              type: 'like',
+              message: `${actorName} liked your post!`,
+            },
+          ]);
+          if (window.Notification && Notification.permission === 'granted') {
+            new Notification('New Like', { body: `${actorName} liked your post!` });
+          }
+        }
       }
     } catch (e) {
       const err = e as any;
       alert(err?.message || err?.details || JSON.stringify(err));
-      // Revert optimistic update on error
       if (userLiked) {
-        // Re-add the like that was optimistically removed
-        setLikes((l) => ({
-          ...l,
-          [postId]: [...currentLikes]
-        }));
+        setLikes((l) => ({ ...l, [postId]: [...currentLikes] }));
       } else {
-        // Remove the like that was optimistically added
-        setLikes((l) => ({
-          ...l,
-          [postId]: currentLikes
-        }));
+        setLikes((l) => ({ ...l, [postId]: currentLikes }));
       }
     } finally {
       setLiking((l) => ({ ...l, [postId]: false }));
@@ -481,14 +487,10 @@ export default function CommunityPage() {
       return;
     }
     if (!commentInputs[postId]?.trim() && !commentImages[postId]) return;
-    
-    // Set commenting state to prevent double-clicks
     setCommenting((c) => ({ ...c, [postId]: true }));
-    
     const commentContent = commentInputs[postId];
     const commentImage = commentImages[postId];
     const tempId = `temp-${Date.now()}`;
-    
     let image_url = null;
     if (commentImage) {
       try {
@@ -500,55 +502,52 @@ export default function CommunityPage() {
         return;
       }
     }
-    
     const newComment = {
-      id: tempId, // Temporary ID until real one comes from server
+      id: tempId,
       post_id: postId,
       user_id: user.id,
       content: commentContent,
       image_url,
       created_at: new Date().toISOString(),
-      // Add user profile info for immediate display
       user_profile: {
         first_name: userProfiles[user.id]?.first_name,
         last_name: userProfiles[user.id]?.last_name,
         profile_picture: userProfiles[user.id]?.profile_picture
       }
     };
-
-    // Immediately add to local state for instant feedback
-    setComments((prev) => ({
-      ...prev,
-      [postId]: [...(prev[postId] || []), newComment]
-    }));
-    
-    // Clear input and image immediately
+    setComments((prev) => ({ ...prev, [postId]: [...(prev[postId] || []), newComment] }));
     setCommentInputs((inputs) => ({ ...inputs, [postId]: "" }));
     setCommentImages((images) => ({ ...images, [postId]: null }));
     if (commentFileInputRefs.current[postId]) {
       commentFileInputRefs.current[postId].value = "";
     }
-
     try {
       const realComment = await addComment({ post_id: postId, user_id: user.id, content: commentContent, image_url });
-      
-      // Replace temporary comment with real comment data
-      setComments((prev) => ({
-        ...prev,
-        [postId]: (prev[postId] || []).map(c => 
-          c.id === tempId ? realComment : c
-        )
-      }));
+      setComments((prev) => ({ ...prev, [postId]: (prev[postId] || []).map(c => c.id === tempId ? realComment : c) }));
+      // Fetch post to get owner
+      const { data: post } = await supabase
+        .from('posts')
+        .select('user_id')
+        .eq('id', postId)
+        .single();
+      if (post && post.user_id && post.user_id !== user.id) {
+        const actorName = `${userProfiles[user.id]?.first_name || ''} ${userProfiles[user.id]?.last_name || ''}`.trim() || user.email || 'Someone';
+        await supabase.from('notifications').insert([
+          {
+            user_id: post.user_id,
+            type: 'comment',
+            message: `${actorName} commented on your post!`,
+          },
+        ]);
+        if (window.Notification && Notification.permission === 'granted') {
+          new Notification('New Comment', { body: `${actorName} commented on your post!` });
+        }
+      }
     } catch (e) {
       const err = e as any;
       alert(err?.message || err?.details || JSON.stringify(err));
-      // Remove the temporary comment if there was an error
-      setComments((prev) => ({
-        ...prev,
-        [postId]: (prev[postId] || []).filter(c => c.id !== tempId)
-      }));
+      setComments((prev) => ({ ...prev, [postId]: (prev[postId] || []).filter(c => c.id !== tempId) }));
     } finally {
-      // Reset commenting state
       setCommenting((c) => ({ ...c, [postId]: false }));
     }
   };
@@ -924,7 +923,7 @@ export default function CommunityPage() {
                                 disabled={commenting[post.id]}
                               >
                                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2 2v12a2 2 0 00-2 2z" />
                                 </svg>
                                 Image
                               </button>

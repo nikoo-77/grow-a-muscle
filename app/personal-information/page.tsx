@@ -5,12 +5,16 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { Dialog, DialogPanel, DialogTitle, DialogBackdrop } from "@headlessui/react";
 import { supabase } from '../../lib/supabaseClient';
+import { getTotalCompletedWorkoutSessions } from '../../lib/supabaseWorkouts';
 
 interface UserProfile {
   id: string;
   first_name: string;
   last_name: string;
   email: string;
+  gender?: string;
+  experience_level?: string;
+  workout_time?: string;
   fitness_goal: string;
   created_at: string;
   last_login: string;
@@ -31,12 +35,26 @@ const FITNESS_GOAL_OPTIONS = [
   { value: "improve-flexibility", label: "Improve Flexibility" },
 ];
 
+// Gender and experience options
+const GENDER_OPTIONS = [
+  { value: "male", label: "Male" },
+  { value: "female", label: "Female" },
+  { value: "other", label: "Other" },
+  { value: "prefer-not-to-say", label: "Prefer not to say" },
+];
+const EXPERIENCE_OPTIONS = [
+  { value: "beginner", label: "Beginner" },
+  { value: "intermediate", label: "Intermediate" },
+  { value: "advanced", label: "Advanced" },
+];
+
 export default function PersonalInformationPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [openModal, setOpenModal] = useState<null | "basic" | "fitness" | "picture" | "heightWeight" | "medical" | "emergency">(null);
+  const [totalWorkouts, setTotalWorkouts] = useState<number>(0);
 
   useEffect(() => {
     if (!loading && !user) {
@@ -63,6 +81,9 @@ export default function PersonalInformationPage() {
                 first_name: '',
                 last_name: '',
                 email: user.email,
+                gender: '',
+                experience_level: '',
+                workout_time: '',
                 fitness_goal: 'muscle-building',
                 created_at: new Date().toISOString(),
                 last_login: new Date().toISOString(),
@@ -83,6 +104,9 @@ export default function PersonalInformationPage() {
                   first_name: '',
                   last_name: '',
                   email: user.email,
+                  gender: '',
+                  experience_level: '',
+                  workout_time: '',
                   fitness_goal: 'muscle-building',
                   created_at: new Date().toISOString(),
                   last_login: new Date().toISOString(),
@@ -104,6 +128,18 @@ export default function PersonalInformationPage() {
       }
     };
     if (user) fetchUserProfile();
+    // Fetch total completed workout sessions
+    const fetchTotalWorkouts = async () => {
+      if (user) {
+        try {
+          const count = await getTotalCompletedWorkoutSessions(user.id);
+          setTotalWorkouts(count);
+        } catch (e) {
+          setTotalWorkouts(0);
+        }
+      }
+    };
+    if (user) fetchTotalWorkouts();
   }, [user]);
 
   if (loading || profileLoading) {
@@ -179,38 +215,6 @@ export default function PersonalInformationPage() {
 
         {/* Profile Info Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Basic Info */}
-          <div className="bg-white text-[#2e3d27] p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-bold mb-4">Basic Info</h2>
-            <div className="space-y-4">
-              <InfoCard label="First Name" value={userProfile?.first_name ?? undefined} />
-              <InfoCard label="Last Name" value={userProfile?.last_name ?? undefined} />
-              <InfoCard label="Email" value={userProfile?.email ?? undefined} />
-              <ActionButton label="Edit Basic Information" onClick={() => setOpenModal("basic")}/>
-            </div>
-          </div>
-
-          {/* Fitness Info */}
-          <div className="bg-white text-[#2e3d27] p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-bold mb-4">Fitness Profile</h2>
-            <div className="space-y-4">
-              <InfoCard label="Fitness Goal" value={userProfile?.fitness_goal?.replace("-", " ") || "Not set"} />
-              <InfoCard label="Experience Level" value="Beginner" />
-              <InfoCard label="Workout Time" value="Not set" />
-              <ActionButton label="Update Fitness Profile" onClick={() => setOpenModal("fitness")}/>
-            </div>
-          </div>
-
-          {/* Account Stats */}
-          <div className="bg-white text-[#2e3d27] p-6 rounded-2xl shadow-md">
-            <h2 className="text-2xl font-bold mb-4">Account Stats</h2>
-            <div className="space-y-4">
-              <InfoCard label="Member Since" value={userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString() : "N/A"} />
-              <InfoCard label="Last Login" value={userProfile?.last_login ? new Date(userProfile.last_login).toLocaleDateString() : "N/A"} />
-              <InfoCard label="Total Workouts" value="0" />
-            </div>
-          </div>
-
           {/* Additional Info */}
           <div className="bg-white text-[#2e3d27] p-6 rounded-2xl shadow-md">
             <h2 className="text-2xl font-bold mb-4">Additional Info</h2>
@@ -228,6 +232,38 @@ export default function PersonalInformationPage() {
               <ActionButton label="Set Height & Weight" onClick={() => setOpenModal("heightWeight")}/>
               <ActionButton label="Add Medical Info" onClick={() => setOpenModal("medical")}/>
               <ActionButton label="Emergency Contacts" onClick={() => setOpenModal("emergency")}/>
+            </div>
+          </div>
+
+          {/* Basic Info */}
+          <div className="bg-white text-[#2e3d27] p-6 rounded-2xl shadow-md">
+            <h2 className="text-2xl font-bold mb-4">Basic Info</h2>
+            <div className="space-y-4">
+              <InfoCard label="First Name" value={userProfile?.first_name ?? undefined} />
+              <InfoCard label="Last Name" value={userProfile?.last_name ?? undefined} />
+              <InfoCard label="Email" value={userProfile?.email ?? undefined} />
+              <ActionButton label="Edit Basic Information" onClick={() => setOpenModal("basic")}/>
+            </div>
+          </div>
+
+          {/* Fitness Info */}
+          <div className="bg-white text-[#2e3d27] p-6 rounded-2xl shadow-md">
+            <h2 className="text-2xl font-bold mb-4">Fitness Profile</h2>
+            <div className="space-y-4">
+              <InfoCard label="Gender" value={userProfile?.gender || "Not set"} />
+              <InfoCard label="Experience Level" value={userProfile?.experience_level ? userProfile.experience_level.charAt(0).toUpperCase() + userProfile.experience_level.slice(1) : "Not set"} />
+              <InfoCard label="Workout Time" value={userProfile?.workout_time || "Not set"} />
+              <ActionButton label="Update Fitness Profile" onClick={() => setOpenModal("fitness")}/>
+            </div>
+          </div>
+
+          {/* Account Stats */}
+          <div className="bg-white text-[#2e3d27] p-6 rounded-2xl shadow-md">
+            <h2 className="text-2xl font-bold mb-4">Account Stats</h2>
+            <div className="space-y-4">
+              <InfoCard label="Member Since" value={userProfile?.created_at ? new Date(userProfile.created_at).toLocaleDateString() : "N/A"} />
+              <InfoCard label="Last Login" value={userProfile?.last_login ? new Date(userProfile.last_login).toLocaleDateString() : "N/A"} />
+              <InfoCard label="Total Workouts" value={totalWorkouts.toString()} />
             </div>
           </div>
         </div>
@@ -320,10 +356,16 @@ function EditBasicInfoModal({ open, onClose, userProfile, user, onSave }: { open
 
 // Modal for editing fitness profile
 function EditFitnessProfileModal({ open, onClose, userProfile, user, onSave }: { open: boolean; onClose: () => void; userProfile: UserProfile | null; user: any; onSave: (updated: UserProfile) => void }) {
-  const [fitness_goal, setFitnessGoal] = useState(userProfile?.fitness_goal || "");
+  const [gender, setGender] = useState(userProfile?.gender || "");
+  const [experience_level, setExperienceLevel] = useState(userProfile?.experience_level || "");
+  const [workout_time, setWorkoutTime] = useState(userProfile?.workout_time || "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  useEffect(() => { setFitnessGoal(userProfile?.fitness_goal || ""); }, [userProfile]);
+  useEffect(() => {
+    setGender(userProfile?.gender || "");
+    setExperienceLevel(userProfile?.experience_level || "");
+    setWorkoutTime(userProfile?.workout_time || "");
+  }, [userProfile]);
   const handleSave = async () => {
     if (!user) return;
     setSaving(true);
@@ -331,11 +373,12 @@ function EditFitnessProfileModal({ open, onClose, userProfile, user, onSave }: {
     try {
       const { error } = await supabase
         .from('users')
-        .update({ fitness_goal })
+        .update({ gender, experience_level, workout_time })
         .eq('id', user.id);
       if (error) throw error;
-      onSave({ ...(userProfile || {}), fitness_goal } as UserProfile);
+      onSave({ ...(userProfile || {}), gender, experience_level, workout_time } as UserProfile);
       onClose();
+      window.location.reload();
     } catch (e: any) {
       setError("Failed to save. Please try again.");
     } finally {
@@ -350,17 +393,39 @@ function EditFitnessProfileModal({ open, onClose, userProfile, user, onSave }: {
           <DialogTitle className="text-2xl font-bold mb-4">Update Fitness Profile</DialogTitle>
           <form className="space-y-4" onSubmit={e => { e.preventDefault(); handleSave(); }}>
             <div>
-              <label className="block text-sm font-medium">Fitness Goal</label>
+              <label className="block text-sm font-medium">Gender</label>
               <select
                 className="w-full border rounded px-3 py-2"
-                value={fitness_goal}
-                onChange={e => setFitnessGoal(e.target.value)}
+                value={gender}
+                onChange={e => setGender(e.target.value)}
               >
-                <option value="">Select a goal</option>
-                {FITNESS_GOAL_OPTIONS.map(opt => (
+                <option value="">Select gender</option>
+                {GENDER_OPTIONS.map(opt => (
                   <option key={opt.value} value={opt.value}>{opt.label}</option>
                 ))}
               </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Experience Level</label>
+              <select
+                className="w-full border rounded px-3 py-2"
+                value={experience_level}
+                onChange={e => setExperienceLevel(e.target.value)}
+              >
+                <option value="">Select level</option>
+                {EXPERIENCE_OPTIONS.map(opt => (
+                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium">Workout Time</label>
+              <input
+                className="w-full border rounded px-3 py-2"
+                value={workout_time}
+                onChange={e => setWorkoutTime(e.target.value)}
+                placeholder="e.g. 6:00 AM, Evenings"
+              />
             </div>
             {error && <div className="text-red-500 text-sm">{error}</div>}
             <div className="flex gap-2 mt-4">
