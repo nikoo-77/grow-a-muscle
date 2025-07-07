@@ -117,9 +117,15 @@ export default function AccountSettingsPage() {
       setPwLoading(false);
       return;
     }
+    // Check for user.email
+    if (!user!.email) {
+      setChangePwError('User email is missing.');
+      setPwLoading(false);
+      return;
+    }
     // Re-authenticate user
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user.email,
+      email: user!.email,
       password: pwForm.oldPassword,
     });
     if (signInError) {
@@ -145,9 +151,15 @@ export default function AccountSettingsPage() {
     setDeleteError('');
     setDeleteSuccess('');
     setDeleting(true);
+    // Check for user.email
+    if (!user!.email) {
+      setDeleteError('User email is missing.');
+      setDeleting(false);
+      return;
+    }
     // Re-authenticate user
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: user.email,
+      email: user!.email,
       password: deletePw,
     });
     if (signInError) {
@@ -159,7 +171,7 @@ export default function AccountSettingsPage() {
     const response = await fetch('/api/delete-user', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: user.id }),
+      body: JSON.stringify({ userId: user!.id }),
     });
     const result = await response.json();
     setDeleting(false);
@@ -180,7 +192,7 @@ export default function AccountSettingsPage() {
     const { error } = await supabase
       .from('users')
       .update({ [prefKey]: newValue })
-      .eq('id', user.id);
+      .eq('id', user!.id);
     if (error) {
       setPrefsError('Failed to update preferences.');
     } else {
@@ -282,7 +294,7 @@ export default function AccountSettingsPage() {
               <div className="p-4 border border-[#e6f4ea] bg-[#f8fdf8] rounded-lg">
                 <p className="text-sm text-[#60ab66]">Member Since</p>
                 <p className="text-lg font-semibold">
-                  {user.created_at ? new Date(user.created_at).toLocaleDateString() : 'N/A'}
+                  {'N/A'}
                 </p>
               </div>
               <div className="p-4 border border-[#e6f4ea] bg-[#f8fdf8] rounded-lg">
